@@ -6,7 +6,7 @@ ImageBridge Desktop is a small Windows companion for the ImageBridge image-hosti
 
 - Dark Liquid Glass-inspired dashboard with a Windows 11 Mica backdrop where available.
 - Drag-and-drop image selection and a preview.
-- Server connection check and remembered server URL.
+- Server connection check, remembered server URL, and optional password-masked API bearer token for protected remote servers.
 - Upload to the existing ImageBridge API; copy the temporary HTTPS URL.
 - Copy the actual image to the Windows clipboard so it can be pasted as a native image attachment into a chat composer that supports image paste.
 - Tray icon and global `Ctrl + Alt + I` shortcut.
@@ -56,8 +56,9 @@ The GitHub Actions workflow also builds a Windows x64 artifact on pushes to `des
 1. Start the ImageBridge server with `npm start`.
 2. Start ImageBridge Desktop.
 3. Keep `http://localhost:3000` if the server runs on this PC, or enter your public HTTPS server URL.
-4. Drop an image into the preview area.
-5. Choose **Subir a ImageBridge** to upload and copy its URL.
-6. Choose **Copiar imagen** if you want to paste a native image attachment into a chat composer.
+4. If the remote server requires authentication, paste its bearer token in **TOKEN API**. Leave it blank for local-only use.
+5. Drop an image into the preview area.
+6. Choose **Subir a ImageBridge** to upload and copy its URL.
+7. Choose **Copiar imagen** if you want to paste a native image attachment into a chat composer.
 
 The server must use persistent storage and HTTPS before it is exposed publicly. Tokenized image URLs are private credentials; do not share them publicly.
