@@ -43,7 +43,11 @@
   function attachNative(file) {
     const candidates = [...document.querySelectorAll('input[type="file"]')]
       .filter(input => !input.dataset.imageBridgePicker && !input.disabled);
-    const target = candidates.find(input => !input.accept || /image|\*/i.test(input.accept));
+    const ext = "." + (file.name.split(".").pop() || "").toLowerCase();
+    const target = candidates.find(input => {
+      const accept = (input.accept || "").toLowerCase();
+      return !accept || accept.includes("*/*") || accept.includes(file.type.toLowerCase()) || accept.split(",").some(value => value.trim() === ext);
+    });
     if (!target) return false;
     try {
       const transfer = new DataTransfer();
