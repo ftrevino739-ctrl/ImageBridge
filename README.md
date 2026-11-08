@@ -25,7 +25,7 @@ In this hosted-link mode, ChatGPT receives the **hosted URL as prompt text**, no
 
 ## ChatGPT Desktop app
 
-The official desktop app has a built-in browser that supports browser extensions. You can use ImageBridge on a ChatGPT web page opened inside that browser. This does not modify the app's native chat composer. The app plugin/Skill workflow is also available, but it does not add a custom button to the native composer.
+The official desktop app has a built-in browser. OpenAI says it supports extensions, but its public instructions do not describe a guaranteed install flow for an arbitrary unpacked extension. Even when an extension is available in that browser, it modifies the browser page, not the app's native chat composer. The app plugin/Skill workflow also does not add a custom button to that native composer.
 
 We do not patch ChatGPT's installed application files or inject code into its process. That approach is unsupported, can break when the app updates, and can compromise its signed installation. A future Windows `.exe` should be a companion installer/manager for the extension and server, not a binary patcher.
 
