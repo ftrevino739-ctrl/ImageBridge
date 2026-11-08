@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "description": "Upload once. Use anywhere. Temporary image hosting bridge for compatible AI agents.",
-  "scripts": { "start": "node src/server.js", "dev": "node --watch src/server.js" },
-  "engines": { "node": ">=20" }
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
 }
