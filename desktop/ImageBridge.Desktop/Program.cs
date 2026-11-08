@@ -35,6 +35,7 @@ internal sealed class MainForm : Form
     private readonly Label uploadStatus = new();
     private readonly Label linkValue = new();
     private readonly PictureBox preview = new();
+    private readonly Label dropPrompt = new();
     private readonly Button uploadButton = new();
     private readonly Button selectButton = new();
     private readonly Button copyUrlButton = new();
@@ -134,8 +135,7 @@ internal sealed class MainForm : Form
         preview.Dock = DockStyle.Fill;
         preview.SizeMode = PictureBoxSizeMode.Zoom;
         preview.Visible = false;
-        var dropPrompt = new Label
-        {
+        dropPrompt.Text =
             Text = "＋\r\n\r\nSUELTA TU IMAGEN AQUÍ\r\n\r\nPNG  ·  JPG  ·  WEBP  ·  GIF  ·  AVIF  ·  HEIC",
             Dock = DockStyle.Fill,
             TextAlign = ContentAlignment.MiddleCenter,
@@ -339,14 +339,28 @@ internal sealed class MainForm : Form
             if (!new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif", ".heic" }.Contains(ext))
                 throw new InvalidOperationException("Formato no admitido.");
             selectedPath = path;
-            using var source = Image.FromFile(path);
-            var copy = new Bitmap(source);
-            var old = preview.Image;
-            preview.Image = copy;
-            old?.Dispose();
-            preview.Visible = true;
+            int? width = null, height = null;
+            try
+            {
+                using var source = Image.FromFile(path);
+                width = source.Width; height = source.Height;
+                var copy = new Bitmap(source);
+                var old = preview.Image;
+                preview.Image = copy;
+                old?.Dispose();
+                preview.Visible = true;
+                dropPrompt.Visible = false;
+            }
+            catch (Exception)
+            {
+                preview.Image?.Dispose();
+                preview.Image = null;
+                preview.Visible = false;
+                dropPrompt.Visible = true;
+                dropPrompt.Text = "VISTA PREVIA NO DISPONIBLE\\r\\n\\r\\nEl archivo se puede subir igualmente.";
+            }
             fileTitle.Text = Path.GetFileName(path);
-            fileMeta.Text = $"{new FileInfo(path).Length / 1024d:N0} KB  ·  {source.Width} × {source.Height}";
+            fileMeta.Text = $"{new FileInfo(path).Length / 1024d:N0} KB" + (width.HasValue ? $"  ·  {width} × {height}" : "  ·  Formato admitido");
             uploadStatus.Text = "Imagen lista para subir.";
         }
         catch (Exception ex) { MessageBox.Show(this, ex.Message, "No se pudo abrir la imagen", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
