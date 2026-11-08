@@ -108,14 +108,13 @@ internal sealed class MainForm : Form
         var shortcut = new Label { Text = "CTRL  +  ALT  +  I", AutoSize = true, TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Segoe UI Semibold", 9), ForeColor = Color.FromArgb(185, 216, 247), BackColor = Color.FromArgb(28, 48, 72), Padding = new Padding(14, 9, 14, 9), Anchor = AnchorStyles.Top | AnchorStyles.Right };
         shortcut.Location = new Point(Width - 245, 30);
         header.Controls.AddRange(new Control[] { brand, tagline, shortcut });
-        Controls.Add(header);
         header.Resize += (_, _) => shortcut.Left = header.ClientSize.Width - shortcut.Width - 8;
 
         var content = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(24, 8, 24, 24), ColumnCount = 2, RowCount = 1, BackColor = Color.Transparent };
         content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 58));
         content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42));
         Controls.Add(content);
-        content.BringToFront();
+        Controls.Add(header);
 
         var uploadCard = new GlassCard { Dock = DockStyle.Fill, Padding = new Padding(22), Margin = new Padding(0, 0, 12, 0) };
         var sideCard = new GlassCard { Dock = DockStyle.Fill, Padding = new Padding(22), Margin = new Padding(12, 0, 0, 0) };
