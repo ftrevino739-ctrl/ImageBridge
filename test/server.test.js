@@ -46,6 +46,15 @@ after(async () => {
   if (dataDir) await rm(dataDir, { recursive: true, force: true });
 });
 
+test("root endpoint explains that the API server is running", async () => {
+  const response = await fetch(base + "/");
+  const data = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(data.ok, true);
+  assert.equal(data.name, "ImageBridge");
+  assert.equal(data.health, "GET /api/health");
+});
+
 test("health endpoint is public and reports authentication", async () => {
   const response = await fetch(base + "/api/health");
   const data = await response.json();
