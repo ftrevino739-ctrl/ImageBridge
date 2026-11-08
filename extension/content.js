@@ -143,10 +143,16 @@
       if (!item.hasAttribute("tabindex")) item.tabIndex = 0;
     }
 
-    const labelNode = [...item.querySelectorAll("span, div, p")]
-      .filter(node => node.children.length === 0 && normalize(node.textContent))
-      .sort((a, b) => a.textContent.length - b.textContent.length)[0];
-    if (labelNode) labelNode.textContent = "ImageBridge";
+    const textWalker = document.createTreeWalker(item, NodeFilter.SHOW_TEXT);
+    let labelTextNode = null;
+    while (textWalker.nextNode()) {
+      const candidate = normalize(textWalker.currentNode.nodeValue);
+      if (ADD_PHOTOS_LABELS.some(label => candidate.startsWith(label))) {
+        labelTextNode = textWalker.currentNode;
+        break;
+      }
+    }
+    if (labelTextNode) labelTextNode.nodeValue = "✧ ImageBridge";
     else item.textContent = "✧ ImageBridge";
 
     item.addEventListener("click", event => {
