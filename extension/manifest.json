@@ -1,9 +1,11 @@
 {
   "manifest_version": 3,
   "name": "ImageBridge Mod",
-  "version": "1.1.0",
-  "description": "Add ImageBridge image previews and hosted-link messages to ChatGPT Web.",
-  "permissions": ["storage"],
+  "version": "1.2.0",
+  "description": "Add ImageBridge as an option inside ChatGPT's + file menu with inline previews.",
+  "permissions": [
+    "storage"
+  ],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://*.chatgpt.com/*",
@@ -11,12 +13,26 @@
     "http://127.0.0.1/*",
     "http://localhost/*"
   ],
-  "content_scripts": [{
-    "matches": ["https://chatgpt.com/*", "https://*.chatgpt.com/*"],
-    "js": ["content.js"],
-    "css": ["content.css"],
-    "run_at": "document_idle"
-  }],
-  "background": { "service_worker": "background.js" },
-  "action": { "default_popup": "popup.html", "default_title": "ImageBridge Mod" }
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://*.chatgpt.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ImageBridge Mod"
+  }
 }
