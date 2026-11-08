@@ -354,7 +354,7 @@ internal sealed class MainForm : Form
                 preview.Image = null;
                 preview.Visible = false;
                 dropPrompt.Visible = true;
-                dropPrompt.Text = "VISTA PREVIA NO DISPONIBLE\\r\\n\\r\\nEl archivo se puede subir igualmente.";
+                dropPrompt.Text = "VISTA PREVIA NO DISPONIBLE\r\n\r\nEl archivo se puede subir igualmente.";
             }
             fileTitle.Text = Path.GetFileName(path);
             fileMeta.Text = $"{new FileInfo(path).Length / 1024d:N0} KB" + (width.HasValue ? $"  ·  {width} × {height}" : "  ·  Formato admitido");
