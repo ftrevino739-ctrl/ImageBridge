@@ -1,6 +1,6 @@
 interface:
   display_name: "ImageBridge"
-  short_description: "Host images for compatible AI tools"
-  default_prompt: "Use $imagebridge to upload this image only when I explicitly ask, verify the temporary link, and explain how the receiving AI can consume it."
+  short_description: "Host local images and documents for compatible AI workflows."
+  default_prompt: "Use ImageBridge only if I explicitly ask you to host or share a local image or document."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false
