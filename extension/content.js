@@ -2,7 +2,13 @@
   if (window.__imageBridgeModLoaded) return;
   window.__imageBridgeModLoaded = true;
 
-  const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif", "image/heic"]);
+  const FILE_TYPES = new Set([
+    "image/jpeg", "image/png", "image/webp", "image/gif", "image/avif", "image/heic",
+    "application/pdf", "text/plain", "text/markdown", "text/csv", "application/json", "application/rtf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+  ]);
   let picker;
 
   function toast(message, url) {
@@ -50,9 +56,9 @@
   }
 
   async function processFiles(files) {
-    const images = [...files].filter(file => IMAGE_TYPES.has(file.type));
-    if (!images.length) return toast("Choose a supported image (JPG, PNG, WEBP, GIF, AVIF or HEIC).");
-    for (const file of images) {
+    const uploads = [...files].filter(file => FILE_TYPES.has(file.type));
+    if (!uploads.length) return toast("Choose a supported image or document (PDF, TXT, MD, CSV, JSON, RTF, DOCX, XLSX or PPTX).");
+    for (const file of uploads) {
       try {
         toast("ImageBridge: uploading " + file.name + "…");
         const encoded = await base64(file);
@@ -86,7 +92,7 @@
 
   picker = document.createElement("input");
   picker.type = "file";
-  picker.accept = "image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic";
+  picker.accept = "image/*,.heic,.pdf,.txt,.md,.csv,.json,.rtf,.docx,.xlsx,.pptx";
   picker.multiple = true;
   picker.hidden = true;
   picker.dataset.imageBridgePicker = "true";
