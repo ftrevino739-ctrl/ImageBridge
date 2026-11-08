@@ -1,1 +1,11 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ImageBridge Mod</title><link rel="stylesheet" href="popup.css"></head><body><main><header><span class="mark">✧</span><div><h1>ImageBridge</h1><p>ChatGPT visual bridge</p></div></header><label>Server URL<input id="server" type="url" placeholder="http://127.0.0.1:3000"></label><label>API token <small>(leave empty for local server)</small><input id="token" type="password" autocomplete="off" placeholder="Private server token"></label><button id="save">Save settings</button><p id="status">Choose a server, then refresh ChatGPT.</p><footer>Hosted URLs are links, not quota bypasses. ChatGPT native attachment limits still apply.</footer></main><script src="popup.js"></script></body></html>
+<!doctype html>
+<html lang="es-MX">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ImageBridge Mod</title><link rel="stylesheet" href="popup.css"></head>
+<body><main>
+  <header><span class="mark">✧</span><div><h1>ImageBridge</h1><p>Vista previa para ChatGPT</p></div></header>
+  <label>URL del servidor<input id="server" type="url" placeholder="http://127.0.0.1:3000"></label>
+  <label>Token API <small>(vacío para servidor local)</small><input id="token" type="password" autocomplete="off" placeholder="Token del servidor privado"></label>
+  <button id="save">Guardar configuración</button>
+  <p id="status">Configura el servidor y actualiza ChatGPT.</p>
+  <footer>El chat recibe un enlace, no los bytes originales. Para que un modelo remoto pueda abrirlo, necesitas un servidor HTTPS público. No elimina cuotas ni límites.</footer>
+</main><script src="popup.js"></script></body></html>

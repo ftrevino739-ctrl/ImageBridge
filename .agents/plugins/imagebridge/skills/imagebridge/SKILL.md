@@ -25,6 +25,6 @@ Node.js 20+ is required.
 Never upload identity documents, credentials, private keys, medical/intimate content, or confidential work without explicit confirmation of destination and purpose. Tokenized URLs are bearer secrets.
 
 ## Model compatibility and limits
-A URL pasted as ordinary prompt text is not a native visual attachment. Compatible vision APIs must receive the URL in their actual image-input field. The ChatGPT browser extension attempts a normal native attachment using original file bytes and remains subject to ChatGPT's standard limits. ImageBridge cannot bypass quotas, file-size limits, subscription restrictions, or safety controls.
+The ChatGPT Web mod can display a visual preview in the browser while submitting the hosted URL as message text. The preview itself is not sent to the model as image pixels. A local URL such as 127.0.0.1 cannot be fetched by remote model servers. Use a public HTTPS endpoint only when the receiving model/tool can retrieve remote files. Even then, a URL pasted into a prompt is not guaranteed to be opened or analyzed automatically.
 
-Report expiration and explain that anyone possessing a tokenized URL can access the file until it expires or is deleted.
+ImageBridge cannot bypass quotas, file-size limits, subscription restrictions, or safety controls. Report expiration and explain that anyone possessing a tokenized URL can access the file until it expires or is deleted.
