@@ -1,6 +1,6 @@
 interface:
   display_name: "ImageBridge"
-  short_description: "Upload images to a configured ImageBridge server"
-  default_prompt: "Use ImageBridge to upload the selected image and return its temporary URL."
+  short_description: "Host images for compatible AI tools"
+  default_prompt: "Use $imagebridge to upload this image only when I explicitly ask, verify the temporary link, and explain how the receiving AI can consume it."
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true
