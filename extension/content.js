@@ -9,6 +9,11 @@
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/vnd.openxmlformats-officedocument.presentationml.presentation"
   ]);
+  const ADD_PHOTOS_LABELS = [
+    "add photos & files", "add photos and files", "add photos or files",
+    "add files or photos", "agregar fotos y archivos", "añadir fotos y archivos",
+    "agregar archivos y fotos", "adjuntar fotos y archivos"
+  ];
 
   let picker;
   let currentForm = null;
@@ -18,86 +23,155 @@
   let statusMessage = "";
   let statusIsError = false;
 
+  const normalize = value => String(value || "").replace(/\\s+/g, " ").trim().toLowerCase();
+
   function setStatus(message, isError = false) {
     statusMessage = message;
     statusIsError = isError;
     renderTray();
   }
 
-  function getComposer(form) {
-    return form.querySelector('#prompt-textarea, [contenteditable="true"], textarea');
+  function getComposer() {
+    return document.querySelector("#prompt-textarea, [data-testid='composer-text-input'], form [contenteditable='true'], form textarea");
+  }
+
+  function getComposerForm() {
+    const editor = getComposer();
+    return editor?.closest("form") || document.querySelector("form");
   }
 
   function renderTray() {
-    if (!currentForm) return;
+    if (!currentForm?.isConnected) return;
     let tray = currentForm.querySelector(".ibm-preview-tray");
     if (!tray) {
       tray = document.createElement("div");
       tray.className = "ibm-preview-tray";
-      const button = currentForm.querySelector(".ibm-button");
-      currentForm.insertBefore(tray, button || null);
+      const editor = currentForm.querySelector("#prompt-textarea, [contenteditable='true'], textarea");
+      if (editor?.parentElement) editor.parentElement.insertBefore(tray, editor);
+      else currentForm.prepend(tray);
     }
     tray.replaceChildren();
     const visibleUploads = pendingUploads.filter(item => !item.submitted);
     tray.hidden = !visibleUploads.length && !statusMessage;
+
     if (visibleUploads.length) {
       const list = document.createElement("div");
       list.className = "ibm-preview-list";
       for (const item of visibleUploads) {
-      const card = document.createElement("div");
-      card.className = "ibm-preview-card";
-      if (item.mime.startsWith("image/")) {
-        const image = document.createElement("img");
-        image.className = "ibm-preview-thumb";
-        image.src = item.localPreview;
-        image.alt = item.name;
-        card.append(image);
-      } else {
-        const icon = document.createElement("span");
-        icon.className = "ibm-preview-file-icon";
-        icon.textContent = item.name.split(".").pop()?.toUpperCase() || "FILE";
-        card.append(icon);
-      }
-      const details = document.createElement("div");
-      details.className = "ibm-preview-details";
-      const name = document.createElement("span");
-      name.className = "ibm-preview-name";
-      name.textContent = item.name;
-      const state = document.createElement("span");
-      state.className = "ibm-preview-state";
-      state.textContent = "Listo para enviar";
-      details.append(name, state);
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.className = "ibm-preview-remove";
-      remove.textContent = "×";
-      remove.title = "Quitar archivo";
-      remove.setAttribute("aria-label", "Quitar " + item.name);
-      remove.addEventListener("click", () => {
-        const index = pendingUploads.indexOf(item);
-        if (index >= 0) pendingUploads.splice(index, 1);
-        URL.revokeObjectURL(item.localPreview);
-        uploadsByUrl.delete(item.url);
-        renderTray();
-      });
+        const card = document.createElement("div");
+        card.className = "ibm-preview-card";
+        if (item.mime.startsWith("image/")) {
+          const image = document.createElement("img");
+          image.className = "ibm-preview-thumb";
+          image.src = item.localPreview;
+          image.alt = item.name;
+          card.append(image);
+        } else {
+          const icon = document.createElement("span");
+          icon.className = "ibm-preview-file-icon";
+          icon.textContent = item.name.split(".").pop()?.toUpperCase() || "FILE";
+          card.append(icon);
+        }
+
+        const details = document.createElement("div");
+        details.className = "ibm-preview-details";
+        const name = document.createElement("span");
+        name.className = "ibm-preview-name";
+        name.textContent = item.name;
+        details.append(name);
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "ibm-preview-remove";
+        remove.textContent = "×";
+        remove.title = "Quitar archivo";
+        remove.setAttribute("aria-label", "Quitar " + item.name);
+        remove.addEventListener("click", () => {
+          const index = pendingUploads.indexOf(item);
+          if (index >= 0) pendingUploads.splice(index, 1);
+          uploadsByUrl.delete(item.url);
+          URL.revokeObjectURL(item.localPreview);
+          renderTray();
+        });
+
         card.append(details, remove);
         list.append(card);
       }
       tray.append(list);
     }
-    const status = document.createElement("div");
-    status.className = "ibm-preview-status";
-    status.textContent = statusMessage;
-    status.dataset.error = statusIsError ? "true" : "false";
-    status.hidden = !statusMessage;
-    tray.append(status);
+
+    if (statusMessage) {
+      const status = document.createElement("div");
+      status.className = "ibm-preview-status";
+      status.textContent = statusMessage;
+      status.dataset.error = statusIsError ? "true" : "false";
+      tray.append(status);
+    }
+  }
+
+  function findAddPhotosMenuItem() {
+    const candidates = [...document.querySelectorAll('[role="menuitem"], [role="option"], button, [tabindex="0"]')]
+      .filter(element => element.isConnected && element.getClientRects().length);
+    const matches = candidates.filter(element => {
+      const text = normalize(element.innerText || element.textContent);
+      return ADD_PHOTOS_LABELS.some(label => text === label || text.startsWith(label + " "));
+    });
+    return matches.sort((a, b) =>
+      normalize(a.innerText || a.textContent).length - normalize(b.innerText || b.textContent).length
+    )[0] || null;
+  }
+
+  function installPlusMenuItem() {
+    if (document.querySelector('[data-imagebridge-menu-item="true"]')) return;
+    const nativeItem = findAddPhotosMenuItem();
+    if (!nativeItem?.parentElement) return;
+
+    // Clone the native menu row so ImageBridge inherits ChatGPT's current menu styling.
+    const item = nativeItem.cloneNode(true);
+    item.removeAttribute("id");
+    item.removeAttribute("data-testid");
+    item.querySelectorAll("[id], [data-testid]").forEach(node => {
+      node.removeAttribute("id");
+      node.removeAttribute("data-testid");
+    });
+    item.dataset.imagebridgeMenuItem = "true";
+    item.setAttribute("aria-label", "ImageBridge");
+    item.setAttribute("title", "Seleccionar archivos con ImageBridge");
+    if (item.tagName === "BUTTON") item.type = "button";
+    else {
+      item.setAttribute("role", nativeItem.getAttribute("role") || "menuitem");
+      if (!item.hasAttribute("tabindex")) item.tabIndex = 0;
+    }
+
+    const labelNode = [...item.querySelectorAll("span, div, p")]
+      .filter(node => node.children.length === 0 && normalize(node.textContent))
+      .sort((a, b) => a.textContent.length - b.textContent.length)[0];
+    if (labelNode) labelNode.textContent = "ImageBridge";
+    else item.textContent = "✧ ImageBridge";
+
+    item.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      // Close the + menu first, then open the normal Windows file picker.
+      const plus = document.querySelector('[data-testid="composer-plus-btn"], button[aria-label*="Add files and more" i], button[aria-label*="Agregar archivos" i], button[aria-label*="Adjuntar archivos" i]');
+      plus?.click();
+      picker.click();
+    });
+    item.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        item.click();
+      }
+    });
+    nativeItem.parentElement.insertBefore(item, nativeItem.nextSibling);
   }
 
   function addUrlsToComposer(form, items) {
-    const editor = getComposer(form);
+    const editor = form.querySelector("#prompt-textarea, [data-testid='composer-text-input'], [contenteditable='true'], textarea");
     if (!editor) throw new Error("No se encontró el campo de mensaje de ChatGPT.");
 
-    const suffix = "\n\n" + items.map(item => "ImageBridge attachment (" + item.name + "): " + item.url).join("\n");
+    const suffix = "\\n\\n" + items.map(item => "ImageBridge attachment (" + item.name + "): " + item.url).join("\\n");
     editor.focus();
 
     if (editor instanceof HTMLTextAreaElement || editor instanceof HTMLInputElement) {
@@ -115,28 +189,25 @@
     selection.removeAllRanges();
     selection.addRange(range);
     const inserted = document.execCommand("insertText", false, suffix);
-    if (!inserted) {
-      const text = document.createTextNode(suffix);
-      range.insertNode(text);
-    }
+    if (!inserted) range.insertNode(document.createTextNode(suffix));
 
-    // Keep the actual URL in the message payload, but display a compact placeholder in the draft.
+    // Preserve the literal URL in the editor's text content while hiding its glyphs.
     const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
     const nodes = [];
     while (walker.nextNode()) nodes.push(walker.currentNode);
     for (const node of nodes) {
       const value = node.nodeValue || "";
-      const item = items.find(candidate => value.includes(candidate.url));
-      if (!item) continue;
-      const index = value.indexOf(item.url);
+      const matched = items.find(candidate => value.includes(candidate.url));
+      if (!matched) continue;
+      const index = value.indexOf(matched.url);
       const fragment = document.createDocumentFragment();
       if (index > 0) fragment.append(document.createTextNode(value.slice(0, index)));
       const hidden = document.createElement("span");
       hidden.className = "ibm-draft-url";
-      hidden.textContent = item.url;
-      hidden.setAttribute("data-imagebridge-url", item.url);
+      hidden.textContent = matched.url;
+      hidden.setAttribute("data-imagebridge-url", matched.url);
       fragment.append(hidden);
-      if (index + item.url.length < value.length) fragment.append(document.createTextNode(value.slice(index + item.url.length)));
+      if (index + matched.url.length < value.length) fragment.append(document.createTextNode(value.slice(index + matched.url.length)));
       node.replaceWith(fragment);
     }
     editor.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: suffix }));
@@ -168,7 +239,8 @@
           else form.requestSubmit();
         } catch (error) {
           replayingSubmit = false;
-          setStatus("No se pudo enviar el enlace. Vuelve a pulsar Enviar.", true);
+          for (const item of items) item.submitted = false;
+          setStatus("No se pudo enviar. Vuelve a pulsar Enviar.", true);
           console.error("ImageBridge submit retry failed:", error);
         }
       }, 80);
@@ -178,8 +250,7 @@
   }
 
   function hideUrlInMessage(message, url) {
-    const links = [...message.querySelectorAll("a[href]")];
-    for (const link of links) {
+    for (const link of message.querySelectorAll("a[href]")) {
       try {
         if (new URL(link.href).href === url) link.style.display = "none";
       } catch {}
@@ -198,7 +269,6 @@
     for (const message of messages) {
       for (const item of uploadsByUrl.values()) {
         if (!(message.textContent || "").includes(item.url)) continue;
-        // ChatGPT can re-render message markup; hide the address and restore our visual preview.
         hideUrlInMessage(message, item.url);
         const alreadyVisible = [...message.querySelectorAll(".ibm-message-preview")]
           .some(node => node.dataset.imagebridgeUrl === item.url);
@@ -276,52 +346,16 @@
     }
   }
 
-  function install() {
-    const form = document.querySelector("form");
+  function installComposerHooks() {
+    const form = getComposerForm();
     if (!form) return;
-    const formChanged = form !== currentForm;
+    const changed = form !== currentForm;
     currentForm = form;
-    let needsRender = formChanged;
-    if (!form.querySelector(".ibm-button")) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "ibm-button";
-      button.textContent = "✧ ImageBridge";
-      button.title = "Agregar una imagen alojada por ImageBridge";
-      button.addEventListener("click", () => picker.click());
-      form.append(button);
-      needsRender = true;
-    }
     if (!form.dataset.imageBridgeSubmitHook) {
       form.dataset.imageBridgeSubmitHook = "true";
       form.addEventListener("submit", event => handleSubmit(form, event), true);
-      form.addEventListener("click", event => {
-        if (replayingSubmit) {
-          replayingSubmit = false;
-          return;
-        }
-        const button = event.target.closest("button");
-        const sendLabel = (button?.getAttribute("aria-label") || "") + " " + (button?.getAttribute("data-testid") || "");
-        if (!button || !(button.type === "submit" || /send|enviar/i.test(sendLabel))) return;
-        const items = pendingUploads.filter(item => !item.submitted);
-        if (!items.length) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        try {
-          addUrlsToComposer(form, items);
-          for (const item of items) item.submitted = true;
-          renderTray();
-          replayingSubmit = true;
-          setTimeout(() => {
-            if (button.isConnected) button.click();
-            else form.requestSubmit();
-          }, 80);
-        } catch (error) {
-          setStatus(error.message || "No se pudieron preparar los archivos.", true);
-        }
-      }, true);
     }
-    if (needsRender || !form.querySelector(".ibm-preview-tray")) renderTray();
+    if (changed || !form.querySelector(".ibm-preview-tray")) renderTray();
   }
 
   picker = document.createElement("input");
@@ -337,9 +371,11 @@
   document.documentElement.append(picker);
 
   const observer = new MutationObserver(() => {
-    install();
+    installPlusMenuItem();
+    installComposerHooks();
     renderSentPreviews();
   });
   observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
-  install();
+  installPlusMenuItem();
+  installComposerHooks();
 })();
