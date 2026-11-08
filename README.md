@@ -2,20 +2,27 @@
 
 **Upload once. Use anywhere.**
 
-ImageBridge is a self-hosted service for uploading images and handing temporary, token-protected URLs to compatible AI clients, agents, and workflows. It does not bypass provider upload quotas, model limits, or access controls; the receiving integration must support fetching image URLs.
+ImageBridge is a self-hosted service and Windows companion for moving images between local workflows and compatible AI clients. It provides temporary, token-protected image URLs and a native clipboard workflow. It does **not** bypass provider upload quotas, model limits, or access controls.
 
-## MVP
+## What works today
 
-- Liquid Glass responsive dashboard.
-- Drag-and-drop and multi-image upload.
-- JPEG, PNG, WEBP, GIF, AVIF and HEIC MIME acceptance.
-- 15 MB default per-file limit (configurable).
-- Random unguessable access tokens for each image.
-- Private image URLs and manual deletion through the API.
-- 24-hour automatic expiration and cleanup.
-- Upload history (metadata only).
+- Responsive Liquid Glass-inspired web dashboard.
+- Node.js image server with a 15 MB default per-file limit and 24-hour default retention.
+- Temporary token-protected image URLs.
+- Windows x64 desktop companion with drag-and-drop, preview, upload, copy URL, copy image, tray icon, and `Ctrl+Alt+I` shortcut.
+- Codex-compatible Agent Skill for explicitly requested image hosting workflows.
+- GitHub Actions build for a self-contained Windows x64 executable.
 
-## Run locally
+## What is not implemented
+
+- Replacing ChatGPT's built-in **+** button.
+- Automatically injecting images into ChatGPT, Codex, or other apps.
+- Making ChatGPT Web treat a pasted URL as a native image attachment.
+- Bypassing subscription, model, or file-upload limits.
+
+For ChatGPT Web/Windows, use **Copiar imagen** in the desktop app and paste with `Ctrl+V` to create a normal image attachment. A compatible vision API can use the temporary URL only when its request explicitly sends the URL as an image input.
+
+## Run the server locally
 
 Requires Node.js 20+.
 
@@ -23,23 +30,31 @@ Requires Node.js 20+.
 npm start
 ```
 
-Open http://localhost:3000. Copy `.env.example` to `.env` and configure environment variables. No third-party packages are required.
+Open `http://localhost:3000`. No third-party Node packages are required.
+
+## Windows desktop app
+
+Download the latest successful build from [GitHub Actions](https://github.com/ftrevino739-ctrl/ImageBridge/actions/workflows/build-windows.yml). Download the `ImageBridge-Windows-x64` artifact and extract it.
+
+Detailed first-run steps: [Windows smoke test](docs/TESTING-WINDOWS.md).
+
+## Agent Skill
+
+The repository includes `.agents/skills/imagebridge/SKILL.md`. Codex can discover it when this repository is opened as a workspace. It is intentionally opt-in and only uploads an image when the user explicitly asks. The skill helps with the temporary-URL workflow; it does not replace the desktop app or attach images to the ChatGPT composer.
 
 ## API
 
-- `POST /api/images`: raw image bytes; set `Content-Type` to the image MIME type and optionally `X-File-Name` to the URL-encoded original filename.
+- `POST /api/images`: raw image bytes; set `Content-Type` and optionally `X-File-Name`.
 - `GET /api/images/:id?token=...`: retrieve image bytes (token required).
 - `DELETE /api/images/:id?token=...`: delete image immediately.
 - `GET /api/history`: active image metadata (no access tokens).
 - `GET /api/health`: service status and configured limits.
 
-Upload success returns an ID, temporary URL, delete URL, size and expiration timestamps. Treat the tokenized URL like a password.
+Treat tokenized URLs like passwords.
 
 ## Deployment and security
 
-The MVP stores files under `data/uploads` and metadata in `data/images.json`. Use a persistent disk; ephemeral hosting filesystems lose uploads on restart or redeploy. For multiple instances, use shared object storage and a database.
-
-Before exposing this service publicly, add authentication, rate limiting, upload quotas, content scanning, HTTPS and abuse monitoring. Do not place private or sensitive images on a public instance. HEIC is accepted by MIME type but is not converted in this MVP. A compatible AI integration must fetch the URL and separately confirm whether the provider retained the attachment before the temporary copy is deleted.
+The MVP stores files under `data/uploads` and metadata in `data/images.json`. Use a persistent disk. Before exposing the service publicly, add authentication, rate limiting, upload quotas, content scanning, HTTPS, and abuse monitoring. Keep the server local during initial testing and do not upload sensitive images to an untrusted host.
 
 ## Configuration
 
