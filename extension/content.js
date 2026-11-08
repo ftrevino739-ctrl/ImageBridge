@@ -15,15 +15,13 @@
   const pendingUploads = [];
   const uploadsByUrl = new Map();
   let replayingSubmit = false;
+  let statusMessage = "";
+  let statusIsError = false;
 
   function setStatus(message, isError = false) {
-    const tray = currentForm?.querySelector(".ibm-preview-tray");
-    if (!tray) return;
-    const status = tray.querySelector(".ibm-preview-status");
-    if (!status) return;
-    status.textContent = message;
-    status.dataset.error = isError ? "true" : "false";
-    status.hidden = !message;
+    statusMessage = message;
+    statusIsError = isError;
+    renderTray();
   }
 
   function getComposer(form) {
@@ -41,14 +39,11 @@
     }
     tray.replaceChildren();
     const visibleUploads = pendingUploads.filter(item => !item.submitted);
-    if (!visibleUploads.length) {
-      tray.hidden = true;
-      return;
-    }
-    tray.hidden = false;
-    const list = document.createElement("div");
-    list.className = "ibm-preview-list";
-    for (const item of visibleUploads) {
+    tray.hidden = !visibleUploads.length && !statusMessage;
+    if (visibleUploads.length) {
+      const list = document.createElement("div");
+      list.className = "ibm-preview-list";
+      for (const item of visibleUploads) {
       const card = document.createElement("div");
       card.className = "ibm-preview-card";
       if (item.mime.startsWith("image/")) {
@@ -85,14 +80,16 @@
         uploadsByUrl.delete(item.url);
         renderTray();
       });
-      card.append(details, remove);
-      list.append(card);
+        card.append(details, remove);
+        list.append(card);
+      }
+      tray.append(list);
     }
-    tray.append(list);
     const status = document.createElement("div");
     status.className = "ibm-preview-status";
-    status.textContent = "";
-    status.hidden = true;
+    status.textContent = statusMessage;
+    status.dataset.error = statusIsError ? "true" : "false";
+    status.hidden = !statusMessage;
     tray.append(status);
   }
 
@@ -296,7 +293,7 @@
       form.dataset.imageBridgeSubmitHook = "true";
       form.addEventListener("submit", event => handleSubmit(form, event), true);
     }
-    if (pendingUploads.length) renderTray();
+    renderTray();
   }
 
   picker = document.createElement("input");
