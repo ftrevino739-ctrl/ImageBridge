@@ -38,7 +38,10 @@ before(async () => {
   await waitForServer();
 });
 after(async () => {
-  if (child && !child.killed) { child.kill(); }
+  if (child && child.exitCode === null) {
+    child.kill();
+    await new Promise(resolve => child.once("exit", resolve));
+  }
   if (dataDir) await rm(dataDir, { recursive: true, force: true });
 });
 
