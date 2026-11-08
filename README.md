@@ -1,19 +1,34 @@
 # ImageBridge Mod
 
-**A visual file bridge for ChatGPT and Codex.**
+**A visual file bridge for ChatGPT Web and compatible AI workflows.**
 
-ImageBridge consists of a browser extension for ChatGPT Web, a local/remote temporary-file server, and a native Agent Skill/plugin package for ChatGPT Desktop and Codex.
+ImageBridge includes a browser extension, a temporary-file server, and an optional plugin/Skill for ChatGPT Desktop and Codex.
 
-## What is integrated
+## ChatGPT Web visual workflow
 
-- **ChatGPT Web (Chrome/Edge):** adds an ImageBridge button beside the composer using the browser extension.
-- **ChatGPT Desktop app:** a repo-scoped local plugin marketplace exposes the ImageBridge plugin in the app's Plugins Directory. The plugin provides an opt-in skill, not a permanent button injected into the native composer.
-- **Codex Desktop / CLI:** the same local plugin marketplace and skill provide the upload workflow. The skill can be invoked explicitly as `$imagebridge` in Codex.
-- **Local server:** stores uploaded files and returns private, expiring URLs.
+1. Click **✧ ImageBridge** beside the ChatGPT Web composer.
+2. Select one or more supported images or documents.
+3. ImageBridge uploads them to your configured server.
+4. A thumbnail/file preview appears in the composer. There is no URL toast.
+5. When you send your message, the extension adds the hosted URL to the submitted message payload. It then visually replaces the URL in your local chat view with an image/file preview.
 
-## Important platform limits
+This is a best-effort browser integration and depends on ChatGPT's current web composer DOM. OpenAI can change that interface, so test after extension or ChatGPT updates.
 
-ImageBridge does **not** remove, reset, or bypass ChatGPT upload quotas, file-size limits, subscription restrictions, or safety controls. A hosted URL pasted as ordinary prompt text is not a native visual attachment. The browser extension attempts a normal native attachment using original bytes, subject to ChatGPT's own rules. The desktop plugin/skill can host files and return links; it cannot force the native ChatGPT or Codex composer to attach those bytes.
+## Important: what ChatGPT actually receives
+
+In this visual-link mode, the browser extension sends the **hosted URL as message text**, not the original image bytes as a native ChatGPT attachment. The preview shown in your browser is a local UI enhancement; it does not itself provide image pixels to the model.
+
+- A local URL such as `http://127.0.0.1:3000` is reachable from your own PC, but not from OpenAI's cloud servers. The model cannot fetch that local image URL.
+- To let a remote model potentially retrieve the file, configure a public HTTPS ImageBridge server with a persistent disk and authentication. The model still may not automatically open arbitrary links; ask it to open the link, and access depends on the model/tools available.
+- For reliable visual analysis inside ChatGPT, use ChatGPT's normal native image attachment. ImageBridge does not bypass quotas, file-size limits, subscription restrictions, or safety controls.
+
+## Platform support
+
+- **ChatGPT Web in Chrome/Edge:** visual composer button, thumbnail preview, hidden-link submission, and sent-message preview.
+- **ChatGPT Desktop app:** local plugin/Skill workflow. It does not inject the same button into the native ChatGPT composer.
+- **Codex Desktop / CLI:** opt-in plugin/Skill workflow, invoked explicitly as `$imagebridge`.
+
+The ChatGPT desktop app's plugin system supports reusable workflows, but it does not provide arbitrary injection of a custom button into the native chat composer. The browser extension runs on ChatGPT Web. Extensions supported by the desktop app's built-in browser apply to pages opened in that browser, not the app's native chat composer.
 
 ## Install in Chrome / Edge (ChatGPT Web)
 
@@ -25,6 +40,8 @@ ImageBridge does **not** remove, reset, or bypass ChatGPT upload quotas, file-si
 6. Configure the server URL in the extension popup.
 7. Open or refresh `https://chatgpt.com`.
 
+For local testing, use `http://127.0.0.1:3000`. Remember: local loopback URLs are not accessible to remote model servers.
+
 ## Install in ChatGPT Desktop and Codex
 
 Requirements: current ChatGPT desktop app / Codex client and Git installed.
@@ -35,13 +52,12 @@ Requirements: current ChatGPT desktop app / Codex client and Git installed.
    ```powershell
    codex plugin marketplace add .
    ```
-   If the command reports that Codex is not installed, install/update Codex CLI or use the ChatGPT desktop app's repo marketplace discovery.
-4. Restart the ChatGPT desktop app.
-5. Open **Plugins** in the sidebar, choose the **ImageBridge** local marketplace, and install **ImageBridge**.
-6. In Codex Desktop, open the same repository as a trusted project. Open **Plugins** / **Sources**, find ImageBridge, and enable it. In Codex CLI, run `codex` and use `/plugins` to install/enable it.
-7. Start a new chat/task and explicitly invoke `$imagebridge` (or select ImageBridge from the plugin/skill picker).
+4. Restart ChatGPT Desktop.
+5. Open **Plugins**, choose the **ImageBridge** local marketplace, and install **ImageBridge**.
+6. In Codex Desktop, open the repository as a trusted project. Open **Plugins** / **Sources**, find ImageBridge, and enable it. In Codex CLI, use `/plugins`.
+7. Invoke `$imagebridge` when you explicitly want to host a local file.
 
-The skill is intentionally opt-in: it will not upload files during normal image analysis. The app plugin adds a reusable workflow, not an unsupported native composer button.
+The plugin/Skill uploads files when explicitly requested; it does not create a visual composer button in the native app.
 
 ## Start the local server
 
@@ -73,10 +89,10 @@ Save the token securely and configure it in the extension. Never publish it in a
 ## Verify
 
 - Server: `Invoke-RestMethod http://127.0.0.1:3000/api/health`
-- Extension: visit ChatGPT Web and confirm the ImageBridge button appears.
-- ChatGPT Desktop: confirm ImageBridge appears under the local Plugins marketplace and can be invoked in a new chat.
-- Codex: confirm ImageBridge appears in `/plugins` and the `$imagebridge` skill is available.
-- Test only with a non-sensitive sample image first.
+- Extension: choose a sample image and confirm the composer preview appears without a URL notification.
+- Send a test message and confirm the link is submitted and then locally rendered as a preview.
+- Use a public HTTPS server only when a remote model needs to retrieve the file.
+- Test with a non-sensitive sample image first.
 
 ## Supported files
 
