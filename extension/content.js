@@ -23,7 +23,7 @@
   let statusMessage = "";
   let statusIsError = false;
 
-  const normalize = value => String(value || "").replace(/\\s+/g, " ").trim().toLowerCase();
+  const normalize = value => String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
 
   function setStatus(message, isError = false) {
     statusMessage = message;
@@ -177,7 +177,7 @@
     const editor = form.querySelector("#prompt-textarea, [data-testid='composer-text-input'], [contenteditable='true'], textarea");
     if (!editor) throw new Error("No se encontró el campo de mensaje de ChatGPT.");
 
-    const suffix = "\\n\\n" + items.map(item => "ImageBridge attachment (" + item.name + "): " + item.url).join("\\n");
+    const suffix = "\n\n" + items.map(item => "ImageBridge attachment (" + item.name + "): " + item.url).join("\n");
     editor.focus();
 
     if (editor instanceof HTMLTextAreaElement || editor instanceof HTMLInputElement) {
