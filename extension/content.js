@@ -279,7 +279,9 @@
   function install() {
     const form = document.querySelector("form");
     if (!form) return;
+    const formChanged = form !== currentForm;
     currentForm = form;
+    let needsRender = formChanged;
     if (!form.querySelector(".ibm-button")) {
       const button = document.createElement("button");
       button.type = "button";
@@ -288,12 +290,13 @@
       button.title = "Agregar una imagen alojada por ImageBridge";
       button.addEventListener("click", () => picker.click());
       form.append(button);
+      needsRender = true;
     }
     if (!form.dataset.imageBridgeSubmitHook) {
       form.dataset.imageBridgeSubmitHook = "true";
       form.addEventListener("submit", event => handleSubmit(form, event), true);
     }
-    renderTray();
+    if (needsRender || !form.querySelector(".ibm-preview-tray")) renderTray();
   }
 
   picker = document.createElement("input");
