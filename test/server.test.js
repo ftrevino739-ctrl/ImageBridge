@@ -2,7 +2,8 @@ import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -87,6 +88,20 @@ test("uploads, protects retrieval, lists metadata, and deletes an image", async 
   assert.equal(deleted.status, 200);
   const gone = await fetch(base + result.url);
   assert.equal(gone.status, 404);
+});
+
+
+test("bundled Skill CLI uploads and verifies a real local file", async () => {
+  const imagePath = join(dataDir, "cli-sample.png");
+  await writeFile(imagePath, png);
+  const env = { ...process.env, IMAGEBRIDGE_URL: base, IMAGEBRIDGE_API_TOKEN: apiToken };
+  for (const script of ["scripts/imagebridge-upload.mjs", ".agents/skills/imagebridge/scripts/upload.mjs"]) {
+    const output = execFileSync(process.execPath, [script, imagePath], { cwd: process.cwd(), env, encoding: "utf8" });
+    const result = JSON.parse(output);
+    assert.equal(result.success, true);
+    assert.equal(result.mime, "image/png");
+    assert.match(result.url, /^http:\/\/127\.0\.0\.1:/);
+  }
 });
 
 test("rejects uploads larger than the configured limit", async () => {
