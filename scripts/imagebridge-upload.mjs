@@ -9,6 +9,9 @@ if (!file) {
 }
 const base = (process.env.IMAGEBRIDGE_URL || "http://127.0.0.1:3000").replace(/\/+$/, "");
 const apiToken = process.env.IMAGEBRIDGE_API_TOKEN || "";
+const parsedBase = new URL(base);
+const isLoopback = ["localhost", "127.0.0.1", "[::1]"].includes(parsedBase.hostname);
+if (!isLoopback && parsedBase.protocol !== "https:") throw new Error("Remote ImageBridge servers must use HTTPS.");
 const mimeByExt = new Map([
   [".jpg","image/jpeg"],[".jpeg","image/jpeg"],[".png","image/png"],
   [".webp","image/webp"],[".gif","image/gif"],[".avif","image/avif"],[".heic","image/heic"]
