@@ -5,6 +5,13 @@ on:
   push:
     paths:
       - "desktop/**"
+      - "src/**"
+      - "public/**"
+      - "test/**"
+      - ".agents/**"
+      - "docs/**"
+      - "package.json"
+      - "README.md"
       - ".github/workflows/build-windows.yml"
 
 permissions:
@@ -16,6 +23,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test ImageBridge server
+        run: npm test
       - name: Install .NET 8 SDK
         uses: actions/setup-dotnet@v4
         with:
