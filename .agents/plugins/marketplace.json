@@ -1,0 +1,20 @@
+{
+  "name": "imagebridge-local",
+  "interface": {
+    "displayName": "ImageBridge"
+  },
+  "plugins": [
+    {
+      "name": "imagebridge",
+      "source": {
+        "source": "local",
+        "path": "./.agents/plugins/imagebridge"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

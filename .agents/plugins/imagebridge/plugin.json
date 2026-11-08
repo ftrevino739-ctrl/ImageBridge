@@ -1,0 +1,26 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "imagebridge",
+  "version": "1.1.0",
+  "description": "Host local images and documents through ImageBridge for compatible AI workflows.",
+  "author": {"name": "ImageBridge contributors", "url": "https://github.com/ftrevino739-ctrl/ImageBridge"},
+  "homepage": "https://github.com/ftrevino739-ctrl/ImageBridge",
+  "repository": "https://github.com/ftrevino739-ctrl/ImageBridge",
+  "license": "MIT",
+  "keywords": ["images", "files", "hosting", "codex", "chatgpt"],
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/imagebridge/SKILL.md",
+      "interface": {
+        "displayName": "ImageBridge",
+        "shortDescription": "Host local images and documents for compatible AI workflows.",
+        "longDescription": "Upload explicitly selected local images or documents to your own ImageBridge server and return expiring links. This plugin does not bypass ChatGPT upload limits.",
+        "developerName": "ImageBridge",
+        "category": "Productivity",
+        "websiteURL": "https://github.com/ftrevino739-ctrl/ImageBridge",
+        "defaultPrompt": ["Use ImageBridge to host this local image or document when I explicitly ask."],
+        "brandColor": "#8B9CFF"
+      }
+    }
+  }
+}
