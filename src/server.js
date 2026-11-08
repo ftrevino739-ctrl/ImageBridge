@@ -23,7 +23,16 @@ const types = new Map([
   ["image/webp", { ext: ".webp", test: b => b.length >= 12 && b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP" }],
   ["image/gif", { ext: ".gif", test: b => ["GIF87a","GIF89a"].includes(b.toString("ascii",0,6)) }],
   ["image/avif", { ext: ".avif", test: b => b.length >= 12 && b.toString("ascii",4,8) === "ftyp" && ["avif","avis","mif1","msf1"].includes(b.toString("ascii",8,12)) }],
-  ["image/heic", { ext: ".heic", test: b => b.length >= 12 && b.toString("ascii",4,8) === "ftyp" && ["heic","heix","hevc","hevx","mif1","msf1"].includes(b.toString("ascii",8,12)) }]
+  ["image/heic", { ext: ".heic", test: b => b.length >= 12 && b.toString("ascii",4,8) === "ftyp" && ["heic","heix","hevc","hevx","mif1","msf1"].includes(b.toString("ascii",8,12)) }],
+  ["application/pdf", { ext: ".pdf", test: b => b.subarray(0, 5).toString("ascii") === "%PDF-" }],
+  ["text/plain", { ext: ".txt", test: () => true }],
+  ["text/markdown", { ext: ".md", test: () => true }],
+  ["text/csv", { ext: ".csv", test: () => true }],
+  ["application/json", { ext: ".json", test: () => true }],
+  ["application/rtf", { ext: ".rtf", test: b => b.subarray(0, 5).toString("ascii") === "{\\rtf" }],
+  ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", { ext: ".docx", test: b => b.length >= 4 && b[0] === 0x50 && b[1] === 0x4b }],
+  ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", { ext: ".xlsx", test: b => b.length >= 4 && b[0] === 0x50 && b[1] === 0x4b }],
+  ["application/vnd.openxmlformats-officedocument.presentationml.presentation", { ext: ".pptx", test: b => b.length >= 4 && b[0] === 0x50 && b[1] === 0x4b }]
 ]);
 if (!Number.isFinite(MAX_MB) || MAX_MB <= 0 || MAX_MB > 100) throw new Error("MAX_UPLOAD_MB must be between 0 and 100.");
 if (!Number.isFinite(TTL_HOURS) || TTL_HOURS <= 0 || TTL_HOURS > 720) throw new Error("TTL_HOURS must be between 0 and 720.");
@@ -68,7 +77,7 @@ function authorized(req) {
   return value.startsWith("Bearer ") && safeEqual(value.slice(7), API_TOKEN);
 }
 function token() { return randomBytes(32).toString("hex"); }
-function validImage(mime, prefix) { return types.get(mime)?.test(prefix) === true; }
+function validUpload(mime, prefix) { return types.get(mime)?.test(prefix) === true; }
 
 async function cleanup() {
   const expired = [];
@@ -107,9 +116,9 @@ const server = http.createServer(async (req, res) => {
       if (rateLimited(req)) return send(res, 429, { error: "Upload rate limit exceeded. Try again later." });
       const mime = (req.headers["content-type"] || "").split(";")[0].toLowerCase();
       const type = types.get(mime);
-      if (!type) return send(res, 415, { error: "Unsupported image type. Use JPEG, PNG, WEBP, GIF, AVIF or HEIC." });
+      if (!type) return send(res, 415, { error: "Unsupported file type. Supported: common images, PDF, TXT, Markdown, CSV, JSON, RTF, DOCX, XLSX and PPTX." });
       const declared = Number(req.headers["content-length"] || 0);
-      if (declared > MAX_BYTES) return send(res, 413, { error: "Image exceeds upload limit." });
+      if (declared > MAX_BYTES) return send(res, 413, { error: "File exceeds upload limit." });
 
       const id = randomUUID(), accessToken = token(), diskName = id + type.ext, path = join(UPLOADS, diskName);
       const out = createWriteStream(path, { flags: "wx" });
@@ -128,9 +137,9 @@ const server = http.createServer(async (req, res) => {
         out.end();
         await once(out, "finish");
         if (size === 0) throw Object.assign(new Error("Empty upload."), { status: 400 });
-        if (!validImage(mime, prefix)) throw Object.assign(new Error("Image signature does not match Content-Type."), { status: 415 });
-        const rawName = req.headers["x-file-name"] || "image" + type.ext;
-        let decoded = "image" + type.ext;
+        if (!validUpload(mime, prefix)) throw Object.assign(new Error("File signature does not match Content-Type."), { status: 415 });
+        const rawName = req.headers["x-file-name"] || "upload" + type.ext;
+        let decoded = "upload" + type.ext;
         try { decoded = decodeURIComponent(rawName); } catch {}
         const safeName = basename(decoded).replace(/[\x00-\x1f\x7f]/g, "").slice(0, 120) || "image" + type.ext;
         const now = Date.now();
