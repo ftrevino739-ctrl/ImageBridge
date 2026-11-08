@@ -400,6 +400,8 @@ internal sealed class MainForm : Form
         var raw = endpoint.Text.Trim().TrimEnd('/') + "/";
         if (!Uri.TryCreate(raw, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
             throw new InvalidOperationException("Escribe una dirección válida, por ejemplo https://tu-servidor.example");
+        if (!uri.IsLoopback && uri.Scheme != Uri.UriSchemeHttps)
+            throw new InvalidOperationException("Los servidores remotos deben usar HTTPS para proteger el token y las imágenes.");
         return uri;
     }
 
