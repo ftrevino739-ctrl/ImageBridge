@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "ImageBridge Mod",
+  "version": "1.0.0",
+  "description": "Add an ImageBridge upload button to ChatGPT Web.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://*.chatgpt.com/*",
+    "https://*/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "content_scripts": [{
+    "matches": ["https://chatgpt.com/*", "https://*.chatgpt.com/*"],
+    "js": ["content.js"],
+    "css": ["content.css"],
+    "run_at": "document_idle"
+  }],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_title": "ImageBridge Mod" }
+}
