@@ -200,31 +200,39 @@
     const messages = document.querySelectorAll('[data-message-author-role="user"]');
     for (const message of messages) {
       for (const item of uploadsByUrl.values()) {
-        if (item.rendered || !(message.textContent || "").includes(item.url)) continue;
+        if (!(message.textContent || "").includes(item.url)) continue;
+        // ChatGPT can re-render message markup; hide the address and restore our visual preview.
         hideUrlInMessage(message, item.url);
-        const preview = document.createElement("div");
-        preview.className = "ibm-message-preview";
-        if (item.mime.startsWith("image/")) {
-          const image = document.createElement("img");
-          image.src = item.url;
-          image.alt = item.name;
-          image.loading = "lazy";
-          preview.append(image);
-        } else {
-          const icon = document.createElement("span");
-          icon.className = "ibm-preview-file-icon";
-          icon.textContent = item.name.split(".").pop()?.toUpperCase() || "FILE";
-          preview.append(icon);
+        const alreadyVisible = [...message.querySelectorAll(".ibm-message-preview")]
+          .some(node => node.dataset.imagebridgeUrl === item.url);
+        if (!alreadyVisible) {
+          const preview = document.createElement("div");
+          preview.className = "ibm-message-preview";
+          preview.dataset.imagebridgeUrl = item.url;
+          if (item.mime.startsWith("image/")) {
+            const image = document.createElement("img");
+            image.src = item.url;
+            image.alt = item.name;
+            image.loading = "lazy";
+            preview.append(image);
+          } else {
+            const icon = document.createElement("span");
+            icon.className = "ibm-preview-file-icon";
+            icon.textContent = item.name.split(".").pop()?.toUpperCase() || "FILE";
+            preview.append(icon);
+          }
+          const caption = document.createElement("span");
+          caption.textContent = item.name;
+          preview.append(caption);
+          message.append(preview);
         }
-        const caption = document.createElement("span");
-        caption.textContent = item.name;
-        preview.append(caption);
-        message.append(preview);
-        item.rendered = true;
-        URL.revokeObjectURL(item.localPreview);
-        const index = pendingUploads.indexOf(item);
-        if (index >= 0) pendingUploads.splice(index, 1);
-        renderTray();
+        if (!item.rendered) {
+          item.rendered = true;
+          URL.revokeObjectURL(item.localPreview);
+          const index = pendingUploads.indexOf(item);
+          if (index >= 0) pendingUploads.splice(index, 1);
+          renderTray();
+        }
       }
     }
   }
