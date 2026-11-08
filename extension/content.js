@@ -122,9 +122,9 @@
   }
 
   function installPlusMenuItem() {
-    if (document.querySelector('[data-imagebridge-menu-item="true"]')) return;
     const nativeItem = findAddPhotosMenuItem();
     if (!nativeItem?.parentElement) return;
+    if (nativeItem.parentElement.querySelector('[data-imagebridge-menu-item="true"]')) return;
 
     // Clone the native menu row so ImageBridge inherits ChatGPT's current menu styling.
     const item = nativeItem.cloneNode(true);
@@ -352,6 +352,18 @@
     }
   }
 
+  function installPlusButtonHook() {
+    const plus = document.querySelector(
+      '[data-testid="composer-plus-btn"], button[aria-label*="Add files and more" i], button[aria-label*="Agregar archivos" i], button[aria-label*="Adjuntar archivos" i]'
+    );
+    if (!plus || plus.dataset.imageBridgePlusHook === "true") return;
+    plus.dataset.imageBridgePlusHook = "true";
+    plus.addEventListener("click", () => {
+      // The menu may be mounted a frame after the + click; retry without blocking ChatGPT's own handler.
+      for (const delay of [0, 60, 180]) setTimeout(installPlusMenuItem, delay);
+    });
+  }
+
   function installComposerHooks() {
     const form = getComposerForm();
     if (!form) return;
@@ -377,11 +389,13 @@
   document.documentElement.append(picker);
 
   const observer = new MutationObserver(() => {
+    installPlusButtonHook();
     installPlusMenuItem();
     installComposerHooks();
     renderSentPreviews();
   });
   observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+  installPlusButtonHook();
   installPlusMenuItem();
   installComposerHooks();
 })();
