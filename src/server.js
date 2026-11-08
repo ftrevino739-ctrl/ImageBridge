@@ -108,6 +108,17 @@ function rateLimited(req) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, "http://localhost");
+    if (req.method === "GET" && url.pathname === "/")
+      return send(res, 200, {
+        ok: true,
+        name: "ImageBridge",
+        message: "ImageBridge API server is running. There is no standalone dashboard in this version.",
+        health: "GET /api/health",
+        upload: "POST /api/images",
+        retrieve: "GET /api/images/:id?token=...",
+        history: "GET /api/history"
+      });
+
     if (req.method === "GET" && url.pathname === "/api/health")
       return send(res, 200, { ok: true, name: "ImageBridge", maxUploadMB: MAX_MB, ttlHours: TTL_HOURS, authentication: Boolean(API_TOKEN) });
 
