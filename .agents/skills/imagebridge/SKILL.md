@@ -1,11 +1,11 @@
 ---
 name: imagebridge
-description: Use ImageBridge only when the user explicitly asks to host, share, or bridge a local image and return a temporary URL for a compatible vision API or workflow. Never claim to bypass ChatGPT or provider upload limits.
+description: Use ImageBridge only when the user explicitly asks to host, share, or bridge a local image or document and return a temporary URL for a compatible vision API or workflow. Never claim to bypass ChatGPT or provider upload limits.
 ---
 
 # ImageBridge Skill
 
-Use this skill only when the user explicitly requests image hosting or a temporary share URL. Do not upload automatically during ordinary image analysis.
+Use this skill only when the user explicitly requests file hosting or a temporary share URL. Do not upload automatically during ordinary image analysis.
 
 ## Server
 
@@ -26,7 +26,7 @@ Use Node.js 20+ and the bundled script:
 node scripts/upload.mjs "/absolute/path/to/image.png"
 ```
 
-The script checks server health, supported image signature and size, uploads the bytes, verifies the URL, and reports expiration.
+The script checks server health, supported file signature and size, uploads the bytes, verifies the URL, and reports expiration.
 
 ## Model compatibility
 
