@@ -1,62 +1,48 @@
 ---
 name: imagebridge
-description: Use ImageBridge to upload a local image to a configured ImageBridge server and return a temporary, token-protected image URL when the user explicitly asks to host, share, or bridge an image. Do not use it to bypass ChatGPT upload limits, and do not upload sensitive images or send images to public servers without explicit permission.
+description: Use ImageBridge when the user explicitly asks to upload, host, share, or bridge a local image and return a temporary image URL for a compatible vision API or workflow. Do not trigger for ordinary image analysis, do not upload automatically, and never claim to bypass ChatGPT or provider upload limits.
 ---
 
-# ImageBridge skill
+# ImageBridge
 
-## Purpose
+Use this skill only when the user explicitly requests image hosting or a temporary share URL. For ordinary ChatGPT image understanding, attach the original image directly instead.
 
-Bridge a local image file to an ImageBridge server. This skill is for workflows that need a temporary image URL. It does not create a native ChatGPT attachment and does not bypass model, plan, file-size, or upload limits.
+## 1. Resolve the server
 
-## Before uploading
+- Default local server: `http://127.0.0.1:3000`.
+- If the user configured a different server, use that exact URL via `IMAGEBRIDGE_URL`.
+- Never invent or silently choose a public upload server.
+- If the server is remote, require the user's configured token in `IMAGEBRIDGE_API_TOKEN`. Do not ask the user to paste secrets into chat; use a secure environment variable or credential store.
 
-1. Confirm the user explicitly asked to upload, host, or share the image. Do not upload automatically just because an image is present in the workspace.
-2. Use a local ImageBridge server by default: `http://localhost:3000`.
-3. If the user configured another server, use that exact base URL. Do not guess a public server.
-4. Never upload credentials, private keys, identity documents, medical images, intimate images, or other sensitive material unless the user explicitly confirms the destination and purpose.
-5. Check the file exists, is an image, and is no larger than the server's configured limit (default 15 MB).
+## 2. Protect the user's data
 
-## Upload workflow
+- Do not upload merely because an image exists in the workspace.
+- Do not upload identity documents, credentials, private keys, medical or intimate images, or other sensitive content without explicit confirmation of both destination and purpose.
+- Check that the file is a real supported image and within the server's advertised size limit.
+- Tokenized image URLs are bearer secrets: share them only with the intended recipient and do not place them in logs, public issues, or unrelated output.
 
-Use a shell tool available in the host environment. Detect MIME from the file, not from an untrusted filename. Supported MIME types are:
+## 3. Upload with the bundled script
 
-- `image/jpeg`
-- `image/png`
-- `image/webp`
-- `image/gif`
-- `image/avif`
-- `image/heic`
-
-Send the raw file bytes:
+Use Node.js 20+; the script has no third-party dependencies. Resolve the bundled script path relative to this skill's directory and run:
 
 ```bash
-curl --fail-with-body -sS -X POST \
-  -H "Content-Type: image/png" \
-  -H "X-File-Name: example.png" \
-  --data-binary @"/absolute/path/to/example.png" \
-  "http://localhost:3000/api/images"
+node scripts/upload.mjs "/absolute/path/to/image.png"
 ```
 
-Replace the MIME type, filename, file path, and server URL with the actual values. On Windows PowerShell, use `curl.exe` rather than the `curl` alias.
+If running from a different working directory, use the absolute path to the bundled `scripts/upload.mjs`.
 
-## Validate and return
+Environment variables:
+- `IMAGEBRIDGE_URL`: server base URL; defaults to `http://127.0.0.1:3000`.
+- `IMAGEBRIDGE_API_TOKEN`: bearer token when the server has authentication enabled.
 
-1. Parse the JSON response. A successful upload returns an `id`, relative `url`, `size`, and `expiresAt`.
-2. Build the absolute URL by resolving the returned `url` against the configured server base URL.
-3. Verify the URL with an HTTP GET before reporting success. Do not expose the tokenized URL in public logs or unrelated output.
-4. Tell the user the expiration time and that anyone possessing the tokenized URL can access the image until it expires or is deleted.
-5. Return the URL as a link only when the user asked for it.
+The script checks server health, file size, extension and file signature, uploads raw bytes, verifies the resulting URL with an HTTP GET, and prints the temporary URL and expiration time. If any check fails, stop and report the actual error; do not repeatedly retry.
 
-## How the receiving AI can use it
+## 4. How the receiving AI consumes the image
 
-A compatible vision API must pass the absolute URL as an image input field (for example, an API's image-URL input), not merely paste it as ordinary text. A normal ChatGPT conversation may not treat a pasted URL as an image attachment. For ChatGPT Web or the Windows app, use ImageBridge Desktop's **Copiar imagen** button and paste with Ctrl+V to create a native image attachment.
+A compatible vision API must pass the absolute URL in its image input field (for example, OpenAI Responses API `input_image.image_url`). Merely pasting the URL as ordinary chat text is not equivalent to an image attachment.
 
-## Failure handling
+For ChatGPT Web or the Windows app, use ImageBridge Desktop's **Copiar imagen** button and paste with Ctrl+V. This places the actual image bytes on the clipboard so ChatGPT can create a native attachment, subject to its normal limits.
 
-- If `/api/health` fails, tell the user the server is unreachable and stop.
-- If upload returns 413, the file exceeds the configured limit.
-- If upload returns 415, the file type is unsupported.
-- If the image URL returns 403 or 404, do not claim the image is accessible.
-- Never retry repeatedly against an unavailable or public server.
-- Never claim that an upload bypasses ChatGPT or model limits.
+## 5. Report honestly
+
+Return the URL only when requested. State its expiration time and explain that anyone who has the tokenized URL can access it until it expires or is deleted. Never describe ImageBridge as unlimited uploads, a ChatGPT limit bypass, or a way to evade provider controls.
