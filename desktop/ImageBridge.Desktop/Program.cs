@@ -29,6 +29,7 @@ internal sealed class MainForm : Form
 
     private readonly HttpClient http = new() { Timeout = TimeSpan.FromSeconds(90) };
     private readonly TextBox endpoint = new();
+    private readonly TextBox apiToken = new();
     private readonly Label connectionStatus = new();
     private readonly Label fileTitle = new();
     private readonly Label fileMeta = new();
@@ -196,6 +197,17 @@ internal sealed class MainForm : Form
         endpoint.BorderStyle = BorderStyle.FixedSingle;
         endpoint.Margin = new Padding(0, 0, 0, 8);
 
+        var tokenLabel = MakeLabel("TOKEN API (solo si el servidor lo solicita)", 8, Color.FromArgb(137, 159, 185), true);
+        tokenLabel.Dock = DockStyle.Top;
+        tokenLabel.Height = 25;
+        apiToken.Dock = DockStyle.Top;
+        apiToken.Height = 34;
+        apiToken.UseSystemPasswordChar = true;
+        apiToken.BackColor = Color.FromArgb(16, 26, 40);
+        apiToken.ForeColor = Color.White;
+        apiToken.BorderStyle = BorderStyle.FixedSingle;
+        apiToken.PlaceholderText = "Pega aquí tu token privado";
+
         var checkButton = new Button { Text = "Comprobar conexión", Dock = DockStyle.Top, Height = 36 };
         StyleButton(checkButton, false);
         checkButton.Click += async (_, _) => await CheckServerAsync();
@@ -240,6 +252,8 @@ internal sealed class MainForm : Form
         sideCard.Controls.Add(resultHeading);
         sideCard.Controls.Add(divider);
         sideCard.Controls.Add(checkButton);
+        sideCard.Controls.Add(apiToken);
+        sideCard.Controls.Add(tokenLabel);
         sideCard.Controls.Add(endpoint);
         sideCard.Controls.Add(serverLabel);
         sideCard.Controls.Add(connectionStatus);
@@ -415,6 +429,8 @@ internal sealed class MainForm : Form
             request.Content = new StreamContent(stream);
             request.Content.Headers.ContentType = new MediaTypeHeaderValue(mime);
             request.Headers.TryAddWithoutValidation("X-File-Name", Uri.EscapeDataString(Path.GetFileName(selectedPath!)));
+            if (!string.IsNullOrWhiteSpace(apiToken.Text))
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiToken.Text.Trim());
             using var response = await http.SendAsync(request);
             var body = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode) throw new InvalidOperationException($"Servidor {(int)response.StatusCode}: {body}");
