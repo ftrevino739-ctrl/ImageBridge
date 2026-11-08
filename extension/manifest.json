@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ImageBridge Mod",
-  "version": "1.0.0",
-  "description": "Add an ImageBridge upload button to ChatGPT Web.",
+  "version": "1.1.0",
+  "description": "Add ImageBridge image previews and hosted-link messages to ChatGPT Web.",
   "permissions": ["storage"],
   "host_permissions": [
     "https://chatgpt.com/*",
