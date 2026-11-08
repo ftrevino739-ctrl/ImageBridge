@@ -7,9 +7,9 @@ ImageBridge is now a browser extension + temporary image server + optional Codex
 ## What the Mod does
 
 - Adds an **ImageBridge** button to ChatGPT Web's composer.
-- Lets you choose image files without opening a separate desktop app.
+- Lets you choose supported images and documents without opening a separate desktop app.
 - Uploads selected images to your configured ImageBridge server and creates private, expiring URLs.
-- Attempts to attach the original image to ChatGPT through its native file input, so the model receives actual image bytes when ChatGPT accepts the attachment.
+- Attempts to attach the original file to ChatGPT through its native file input, so the model receives actual image bytes when ChatGPT accepts the attachment.
 - Shows/copies the hosted URL as a separate shareable reference.
 - Provides an options popup for the server URL and API token.
 
@@ -81,7 +81,7 @@ Compatible vision APIs must pass the resulting URL in their actual image-input f
 | DELETE | `/api/images/:id?token=...` | Delete an image |
 | GET | `/api/history` | List upload metadata |
 
-Supported images: JPEG, PNG, WEBP, GIF, AVIF and HEIC. Default max upload: 15 MB. Default retention: 24 hours.
+Supported: JPEG, PNG, WEBP, GIF, AVIF, HEIC, PDF, TXT, Markdown, CSV, JSON, RTF, DOCX, XLSX and PPTX. Default max upload: 15 MB. Default retention: 24 hours.
 
 ## Security
 
