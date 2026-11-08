@@ -1,0 +1,6 @@
+interface:
+  display_name: "ImageBridge"
+  short_description: "Upload images to a configured ImageBridge server"
+  default_prompt: "Use ImageBridge to upload the selected image and return its temporary URL."
+policy:
+  allow_implicit_invocation: false
