@@ -295,6 +295,31 @@
     if (!form.dataset.imageBridgeSubmitHook) {
       form.dataset.imageBridgeSubmitHook = "true";
       form.addEventListener("submit", event => handleSubmit(form, event), true);
+      form.addEventListener("click", event => {
+        if (replayingSubmit) {
+          replayingSubmit = false;
+          return;
+        }
+        const button = event.target.closest("button");
+        const sendLabel = (button?.getAttribute("aria-label") || "") + " " + (button?.getAttribute("data-testid") || "");
+        if (!button || !(button.type === "submit" || /send|enviar/i.test(sendLabel))) return;
+        const items = pendingUploads.filter(item => !item.submitted);
+        if (!items.length) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        try {
+          addUrlsToComposer(form, items);
+          for (const item of items) item.submitted = true;
+          renderTray();
+          replayingSubmit = true;
+          setTimeout(() => {
+            if (button.isConnected) button.click();
+            else form.requestSubmit();
+          }, 80);
+        } catch (error) {
+          setStatus(error.message || "No se pudieron preparar los archivos.", true);
+        }
+      }, true);
     }
     if (needsRender || !form.querySelector(".ibm-preview-tray")) renderTray();
   }
