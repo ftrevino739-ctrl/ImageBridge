@@ -48,8 +48,8 @@ This tests a real image attachment through the clipboard. It does not make ChatG
 ## 5. Test the global shortcut and tray
 
 - Press **Ctrl+Alt+I**. ImageBridge should come to the foreground and open the image picker.
-- Close or minimize the window and confirm the tray icon remains available.
-- Use the tray icon to reopen the app.
+- Minimize the window (do not click the X, because that exits the app) and confirm the tray icon remains available.
+- Double-click the tray icon to restore the app.
 
 ## 6. Report the result
 
