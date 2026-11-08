@@ -66,7 +66,7 @@ test("uploads, protects retrieval, lists metadata, and deletes an image", async 
   const result = await upload.json();
   assert.match(result.url, /^\/api\/images\//);
 
-  const blocked = await fetch(base + result.url);
+  const blocked = await fetch(base + result.url.replace(/token=.*/, "token=wrong"));
   assert.equal(blocked.status, 403);
 
   const image = await fetch(base + result.url);
