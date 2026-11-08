@@ -135,14 +135,12 @@ internal sealed class MainForm : Form
         preview.Dock = DockStyle.Fill;
         preview.SizeMode = PictureBoxSizeMode.Zoom;
         preview.Visible = false;
-        dropPrompt.Text =
-            Text = "＋\r\n\r\nSUELTA TU IMAGEN AQUÍ\r\n\r\nPNG  ·  JPG  ·  WEBP  ·  GIF  ·  AVIF  ·  HEIC",
-            Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleCenter,
-            ForeColor = Color.FromArgb(166, 193, 222),
-            Font = new Font("Segoe UI Semibold", 10),
-            BackColor = Color.Transparent
-        };
+        dropPrompt.Text = "＋\r\n\r\nSUELTA TU IMAGEN AQUÍ\r\n\r\nPNG  ·  JPG  ·  WEBP  ·  GIF  ·  AVIF  ·  HEIC";
+        dropPrompt.Dock = DockStyle.Fill;
+        dropPrompt.TextAlign = ContentAlignment.MiddleCenter;
+        dropPrompt.ForeColor = Color.FromArgb(166, 193, 222);
+        dropPrompt.Font = new Font("Segoe UI Semibold", 10);
+        dropPrompt.BackColor = Color.Transparent;
         drop.Controls.Add(preview);
         drop.Controls.Add(dropPrompt);
         dropPrompt.BringToFront();
