@@ -1,0 +1,32 @@
+name: Build ImageBridge for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "desktop/**"
+      - ".github/workflows/build-windows.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Publish self-contained EXE
+        shell: pwsh
+        run: |
+          dotnet publish desktop/ImageBridge.Desktop/ImageBridge.Desktop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts/ImageBridge-win-x64
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ImageBridge-Windows-x64
+          path: artifacts/ImageBridge-win-x64/
+          if-no-files-found: error
