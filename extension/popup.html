@@ -2,10 +2,10 @@
 <html lang="es-MX">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ImageBridge Mod</title><link rel="stylesheet" href="popup.css"></head>
 <body><main>
-  <header><span class="mark">✧</span><div><h1>ImageBridge</h1><p>Integrado en el menú + de ChatGPT</p></div></header>
-  <label>URL del servidor<input id="server" type="url" placeholder="http://127.0.0.1:3000"></label>
-  <label>Token API <small>(vacío para servidor local)</small><input id="token" type="password" autocomplete="off" placeholder="Token del servidor privado"></label>
+  <header><span class="mark">✧</span><div><h1>ImageBridge</h1><p>Configuración de la extensión</p></div></header>
+  <label>Servidor de archivos<input id="server" type="url" placeholder="https://imagebridge-storage.tu-cuenta.workers.dev"></label>
+  <label>Token de subida <small>(vacío solo para servidor local)</small><input id="token" type="password" autocomplete="off" placeholder="Token secreto de ImageBridge"></label>
   <button id="save">Guardar configuración</button>
-  <p id="status">Configura el servidor y actualiza ChatGPT.</p>
-  <footer>Muestra miniaturas y envía enlaces alojados como texto. Un servidor local no es accesible para modelos remotos. No elimina cuotas ni límites.</footer>
+  <p id="status">Esta ventana solo configura ImageBridge. Para adjuntar: abre ChatGPT y pulsa + → ✧ ImageBridge.</p>
+  <footer>El chat recibe un enlace, no los bytes originales. Usa un servidor HTTPS público si el modelo necesita recuperar el archivo. No elimina cuotas ni límites.</footer>
 </main><script src="popup.js"></script></body></html>
