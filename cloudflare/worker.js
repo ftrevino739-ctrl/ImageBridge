@@ -155,7 +155,7 @@ export default {
       return json({ ok: true, name: "ImageBridge Cloudflare", storage: "R2", maxUploadMB: Number(env.MAX_UPLOAD_MB || MAX_DEFAULT_MB), ttlHours: Number(env.TTL_HOURS || TTL_DEFAULT_HOURS), authentication: true });
     }
     if (request.method === "POST" && url.pathname === "/api/images") return upload(request, env);
-    const match = url.pathname.match(/^\\/api\\/images\\/([a-f0-9]{32})$/i);
+    const match = url.pathname.match(/^\/api\/images\/([a-f0-9]{32})$/i);
     if (request.method === "GET" && match) return retrieve(request, env, match[1]);
     return json({ error: "Not found" }, 404);
   },
