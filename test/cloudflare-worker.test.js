@@ -53,7 +53,7 @@ test("Cloudflare worker stores and retrieves a token-protected file", async () =
   assert.equal(uploaded.status, 200);
   const data = await uploaded.json();
   assert.equal(data.ok, true);
-  assert.match(data.url, /^https:\/\/ib\\.example\\.workers\\.dev\/api\/images\/[a-f0-9]{32}\\?token=/);
+  assert.match(data.url, /^https:\/\/ib\.example\.workers\.dev\/api\/images\/[a-f0-9]{32}\?token=/);
 
   const retrieved = await worker.fetch(new Request(data.url), { FILES: bucket, IMAGEBRIDGE_API_TOKEN: apiToken });
   assert.equal(retrieved.status, 200);
