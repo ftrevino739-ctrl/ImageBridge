@@ -53,7 +53,7 @@ function validSignature(type, bytes) {
   const b = new Uint8Array(bytes);
   const ascii = (start, end) => new TextDecoder().decode(b.slice(start, end));
   if (type === "image/jpeg") return b.length >= 3 && b[0] === 255 && b[1] === 216 && b[2] === 255;
-  if (type === "image/png") return ascii(0, 8) === "\x89PNG\r\n\x1a\n";
+  if (type === "image/png") return b.length >= 8 && [137, 80, 78, 71, 13, 10, 26, 10].every((value, index) => b[index] === value);
   if (type === "image/webp") return ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP";
   if (type === "image/gif") return ["GIF87a", "GIF89a"].includes(ascii(0, 6));
   if (type === "image/avif") return ascii(4, 8) === "ftyp" && ["avif", "avis", "mif1", "msf1"].includes(ascii(8, 12));
