@@ -10,6 +10,16 @@
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/vnd.openxmlformats-officedocument.presentationml.presentation"
   ]);
+  const MIME_BY_EXTENSION = {
+    jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp",
+    gif: "image/gif", avif: "image/avif", heic: "image/heic", pdf: "application/pdf",
+    txt: "text/plain", md: "text/markdown", csv: "text/csv", json: "application/json",
+    rtf: "application/rtf",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+  };
+  const getMime = file => file.type || MIME_BY_EXTENSION[file.name.split(".").pop()?.toLowerCase()] || "";
   const ADD_PHOTOS_LABELS = [
     "add photos & files", "add photos and files", "add photos or files",
     "add files or photos", "agregar fotos y archivos", "añadir fotos y archivos",
@@ -340,12 +350,12 @@
     });
     const result = await chrome.runtime.sendMessage({
       type: "IMAGEBRIDGE_UPLOAD",
-      file: { name: file.name, type: file.type, data: encoded }
+      file: { name: file.name, type: getMime(file), data: encoded }
     });
     if (!result?.ok) throw new Error(result?.error || "No se pudo subir " + file.name + ".");
     const item = {
       name: file.name,
-      mime: file.type,
+      mime: getMime(file),
       url: result.url,
       localPreview: URL.createObjectURL(file),
       submitted: false,
@@ -357,7 +367,7 @@
   }
 
   async function processFiles(files) {
-    const uploads = [...files].filter(file => FILE_TYPES.has(file.type));
+    const uploads = [...files].filter(file => FILE_TYPES.has(getMime(file)));
     if (!uploads.length) {
       setStatus("Elige una imagen o documento compatible.", true);
       return;
