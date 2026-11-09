@@ -1,6 +1,7 @@
 (() => {
   if (window.__imageBridgeModLoaded) return;
   window.__imageBridgeModLoaded = true;
+  console.info("[ImageBridge] Mod loaded on", location.href);
 
   const FILE_TYPES = new Set([
     "image/jpeg", "image/png", "image/webp", "image/gif", "image/avif", "image/heic",
@@ -110,29 +111,44 @@
   }
 
   function findAddPhotosMenuItem() {
-    const candidates = [...document.querySelectorAll('[role="menuitem"], [role="option"], button, [tabindex="0"]')]
-      .filter(element => element.isConnected && element.getClientRects().length);
-    const matches = candidates.filter(element => {
-      const text = normalize(element.innerText || element.textContent);
-      return ADD_PHOTOS_LABELS.some(label => text === label || text.startsWith(label + " "));
-    });
-    return matches.sort((a, b) =>
-      normalize(a.innerText || a.textContent).length - normalize(b.innerText || b.textContent).length
-    )[0] || null;
+    const candidates = [...document.querySelectorAll(
+      '[role="menuitem"], [role="option"], [data-radix-collection-item], [tabindex="0"], [role="button"], button'
+    )].filter(element => element.isConnected && element.getClientRects().length);
+
+    const matches = candidates.map(element => {
+      const text = normalize([
+        element.getAttribute("aria-label"),
+        element.getAttribute("data-testid"),
+        element.innerText,
+        element.textContent
+      ].filter(Boolean).join(" "));
+      const english = text.includes("add photos") && text.includes("files");
+      const spanish = (text.includes("agregar") || text.includes("añadir")) &&
+        (text.includes("fotos") || text.includes("imágenes")) &&
+        (text.includes("archivos") || text.includes("ficheros"));
+      return { element, text, matches: english || spanish };
+    }).filter(item => item.matches && item.text.length < 180);
+
+    matches.sort((a, b) => a.text.length - b.text.length);
+    return matches[0]?.element || null;
   }
 
   function installPlusMenuItem() {
     const nativeItem = findAddPhotosMenuItem();
-    if (!nativeItem?.parentElement) return;
-    if (nativeItem.parentElement.querySelector('[data-imagebridge-menu-item="true"]')) return;
+    if (!nativeItem?.parentElement) return false;
+    if (nativeItem.parentElement.querySelector('[data-imagebridge-menu-item="true"]')) return true;
 
-    // Clone the native menu row so ImageBridge inherits ChatGPT's current menu styling.
+    // Clone the actual visible native row to inherit ChatGPT's menu layout and theme.
     const item = nativeItem.cloneNode(true);
     item.removeAttribute("id");
     item.removeAttribute("data-testid");
-    item.querySelectorAll("[id], [data-testid]").forEach(node => {
+    item.removeAttribute("aria-controls");
+    item.removeAttribute("aria-describedby");
+    item.querySelectorAll("[id], [data-testid], [aria-controls], [aria-describedby]").forEach(node => {
       node.removeAttribute("id");
       node.removeAttribute("data-testid");
+      node.removeAttribute("aria-controls");
+      node.removeAttribute("aria-describedby");
     });
     item.dataset.imagebridgeMenuItem = "true";
     item.setAttribute("aria-label", "ImageBridge");
@@ -140,28 +156,31 @@
     if (item.tagName === "BUTTON") item.type = "button";
     else {
       item.setAttribute("role", nativeItem.getAttribute("role") || "menuitem");
-      if (!item.hasAttribute("tabindex")) item.tabIndex = 0;
+      item.tabIndex = nativeItem.tabIndex >= 0 ? nativeItem.tabIndex : 0;
     }
 
     const textWalker = document.createTreeWalker(item, NodeFilter.SHOW_TEXT);
     let labelTextNode = null;
     while (textWalker.nextNode()) {
       const candidate = normalize(textWalker.currentNode.nodeValue);
-      if (ADD_PHOTOS_LABELS.some(label => candidate.startsWith(label))) {
+      if ((candidate.includes("add photos") && candidate.includes("files")) ||
+          ((candidate.includes("agregar") || candidate.includes("añadir")) &&
+           (candidate.includes("fotos") || candidate.includes("imágenes")) &&
+           (candidate.includes("archivos") || candidate.includes("ficheros")))) {
         labelTextNode = textWalker.currentNode;
         break;
       }
     }
     if (labelTextNode) labelTextNode.nodeValue = "✧ ImageBridge";
-    else item.textContent = "✧ ImageBridge";
+    else {
+      const label = item.querySelector("span, p, div") || item;
+      label.textContent = "✧ ImageBridge";
+    }
 
     item.addEventListener("click", event => {
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
-      // Close the + menu first, then open the normal Windows file picker.
-      const plus = document.querySelector('[data-testid="composer-plus-btn"], button[aria-label*="Add files and more" i], button[aria-label*="Agregar archivos" i], button[aria-label*="Adjuntar archivos" i]');
-      plus?.click();
       picker.click();
     });
     item.addEventListener("keydown", event => {
@@ -171,6 +190,8 @@
       }
     });
     nativeItem.parentElement.insertBefore(item, nativeItem.nextSibling);
+    console.info("[ImageBridge] Added ImageBridge to ChatGPT's + menu.");
+    return true;
   }
 
   function addUrlsToComposer(form, items) {
@@ -353,14 +374,19 @@
   }
 
   function installPlusButtonHook() {
-    const plus = document.querySelector(
-      '[data-testid="composer-plus-btn"], button[aria-label*="Add files and more" i], button[aria-label*="Agregar archivos" i], button[aria-label*="Adjuntar archivos" i]'
-    );
+    const plus = document.querySelector('[data-testid="composer-plus-btn"], button[aria-label*="Add files and more" i], button[aria-label*="Agregar archivos" i], button[aria-label*="Adjuntar archivos" i]');
     if (!plus || plus.dataset.imageBridgePlusHook === "true") return;
     plus.dataset.imageBridgePlusHook = "true";
     plus.addEventListener("click", () => {
-      // The menu may be mounted a frame after the + click; retry without blocking ChatGPT's own handler.
-      for (const delay of [0, 60, 180]) setTimeout(installPlusMenuItem, delay);
+      // ChatGPT mounts the popover asynchronously. Retry after its menu rows exist.
+      for (const delay of [40, 120, 260, 500]) {
+        setTimeout(() => {
+          const inserted = installPlusMenuItem();
+          if (!inserted && delay === 500) {
+            console.warn("[ImageBridge] Could not find the Add photos & files row. Check the current ChatGPT menu labels/DOM.");
+          }
+        }, delay);
+      }
     });
   }
 
