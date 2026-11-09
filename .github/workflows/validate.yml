@@ -6,6 +6,8 @@ on:
     paths:
       - "extension/**"
       - "src/**"
+      - "cloudflare/**"
+      - "wrangler.jsonc"
       - "test/**"
       - ".agents/**"
       - "docs/**"
