@@ -122,10 +122,16 @@ async function signedCloudinaryPost(env, resourceType, action, params, file) {
 async function destroyAsset(env, resourceType, publicId) {
   return signedCloudinaryPost(env, resourceType, "destroy", { public_id: publicId, type: "authenticated", invalidate: "true" });
 }
-function publicDeliveryUrl(env, payload) {
+async function publicDeliveryUrl(env, payload) {
   const encodedId = payload.publicId.split("/").map(encodeURIComponent).join("/");
+  const signedPath = "v" + payload.version + "/" + payload.publicId;
+  const digest = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(signedPath + env.CLOUDINARY_API_SECRET));
+  const signature = bytesToBase64Url(new Uint8Array(digest)).slice(0, 8);
   return "https://res.cloudinary.com/" + encodeURIComponent(env.CLOUDINARY_CLOUD_NAME) + "/" +
-    payload.resourceType + "/upload/v" + payload.version + "/" + encodedId;
+    payload.resourceType + "/authenticated/s--" + signature + "--/" + encodedIdPath(payload.version, encodedId);
+}
+function encodedIdPath(version, encodedId) {
+  return "v" + version + "/" + encodedId;
 }
 async function upload(request, env) {
   if (!authorized(request, env)) return json({ error: "Unauthorized. Configure the ImageBridge API token." }, 401);
