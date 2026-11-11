@@ -93,7 +93,7 @@ The toolbar icon opens extension settings; it is not the file picker.
 
 ## Windows Desktop application
 
-The planned ImageBridge Desktop app will be an independent Windows application for file management, upload history, storage status, integrations, settings, and updates. It will use the same ImageBridge API and will not patch ChatGPT binaries or inject into its process. It is not part of this branch yet.
+The Windows Desktop application source is now in `desktop/ImageBridge.Desktop/`. It is an independent WPF application with a dark glass-style dashboard, server connection testing, file uploads, history, integration information, and settings. The API token is encrypted for the current Windows user with DPAPI. GitHub Actions builds a self-contained Windows x64 `.exe` and publishes it as the `ImageBridge-Desktop-win-x64` workflow artifact. The app is still an early release: update delivery, richer file management, and live account deployment remain future work.
 
 ## Security
 
