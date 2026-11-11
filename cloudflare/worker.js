@@ -151,7 +151,7 @@ async function upload(request, env) {
   const context = "ib_meta=" + meta;
   try {
     const result = await signedCloudinaryPost(env, resourceType, "upload", {
-      public_id: publicId, context, tags: "imagebridge"
+      public_id: publicId, context, tags: "imagebridge", type: "authenticated"
     }, new Blob([bytes], { type: mime }));
     const payload = { id, publicId, resourceType, version: result.version, name, mime, size: bytes.byteLength, createdAt, expiresAt };
     const token = await makeAccessToken(payload, env.IMAGEBRIDGE_API_TOKEN);
@@ -176,7 +176,7 @@ async function retrieve(request, env, id) {
     await destroyAsset(env, payload.resourceType, payload.publicId).catch(error => console.error("Expired asset cleanup failed:", error));
     return json({ error: "File expired" }, 410);
   }
-  const upstream = await fetch(publicDeliveryUrl(env, payload));
+  const upstream = await fetch(await publicDeliveryUrl(env, payload));
   if (!upstream.ok) return json({ error: "File not found in Cloudinary." }, 404);
   const inline = payload.mime.startsWith("image/") || payload.mime === "application/pdf";
   const safeFilename = String(payload.name || "download").replace(/["\\\r\n]/g, "_");
