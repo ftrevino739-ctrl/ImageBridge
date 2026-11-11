@@ -19,10 +19,10 @@
             </Border>
             <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
               <TextBlock Text="ImageBridge" FontSize="18" FontWeight="SemiBold"/>
-              <TextBlock Text="DESKTOP" FontSize="10" Foreground="#91A0B8" CharacterSpacing="160"/>
+              <TextBlock Text="DESKTOP" FontSize="10" Foreground="#91A0B8"/>
             </StackPanel>
           </StackPanel>
-          <TextBlock Text="WORKSPACE" FontSize="10" Foreground="#71819A" Margin="4,0,0,10" CharacterSpacing="130"/>
+          <TextBlock Text="WORKSPACE" FontSize="10" Foreground="#71819A" Margin="4,0,0,10"/>
           <Button Content="⌂   Inicio" Tag="Inicio" Click="Nav_Click" HorizontalContentAlignment="Left"/>
           <Button Content="▤   Archivos" Tag="Archivos" Click="Nav_Click" HorizontalContentAlignment="Left"/>
           <Button Content="↑   Subir archivos" Tag="Subir archivos" Click="Nav_Click" HorizontalContentAlignment="Left"/>
@@ -34,7 +34,7 @@
         </StackPanel>
         <Border DockPanel.Dock="Bottom" Margin="16" Padding="12" CornerRadius="12" Background="#162238" BorderBrush="#2A3C57" BorderThickness="1">
           <StackPanel>
-            <TextBlock Text="ESTADO DEL SERVIDOR" FontSize="9" Foreground="#91A0B8" CharacterSpacing="80"/>
+            <TextBlock Text="ESTADO DEL SERVIDOR" FontSize="9" Foreground="#91A0B8"/>
             <TextBlock x:Name="SidebarStatusText" Text="Sin comprobar" FontSize="12" Margin="0,6,0,0"/>
           </StackPanel>
         </Border>
@@ -61,7 +61,7 @@
 
       <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
         <StackPanel>
-          <Grid Margin="0,0,0,16">
+          <Grid x:Name="OverviewCards" Margin="0,0,0,16">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <Border Grid.Column="0" Padding="19" CornerRadius="16" Background="#142036" BorderBrush="#2A3C57" BorderThickness="1">
               <StackPanel>
@@ -115,6 +115,23 @@
               </StackPanel>
               <ListBox x:Name="HistoryList" Background="Transparent" BorderThickness="0" Foreground="#E8EEF8" MinHeight="90" MaxHeight="230"/>
             </DockPanel>
+          </Border>
+          <Border x:Name="IntegrationsPanel" Visibility="Collapsed" Padding="22" CornerRadius="16" Background="#121A2B" BorderBrush="#26344B" BorderThickness="1" Margin="0,0,0,16">
+            <StackPanel>
+              <TextBlock Text="Integraciones disponibles" FontSize="18" FontWeight="SemiBold"/>
+              <TextBlock Text="ChatGPT Web" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,4"/>
+              <TextBlock Text="La extensión de Chrome o Edge añade ✧ ImageBridge al menú + de chatgpt.com. La extensión se instala desde la carpeta extension del repositorio." Foreground="#91A0B8" TextWrapping="Wrap"/>
+              <TextBlock Text="Codex y herramientas compatibles" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,4"/>
+              <TextBlock Text="El repositorio incluye una Skill/CLI para flujos que pueden invocar ImageBridge. Esta aplicación de escritorio administra el servidor y los archivos; no modifica la aplicación nativa de ChatGPT." Foreground="#91A0B8" TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+          <Border x:Name="StoragePanel" Visibility="Collapsed" Padding="22" CornerRadius="16" Background="#121A2B" BorderBrush="#26344B" BorderThickness="1" Margin="0,0,0,16">
+            <StackPanel>
+              <TextBlock Text="Proveedor de almacenamiento" FontSize="18" FontWeight="SemiBold"/>
+              <TextBlock Text="Cloudinary" FontSize="15" FontWeight="SemiBold" Margin="0,14,0,4"/>
+              <TextBlock Text="El Worker guarda imágenes y documentos como recursos autenticados y los entrega mediante enlaces temporales. El uso y los límites dependen del plan de Cloudinary." Foreground="#91A0B8" TextWrapping="Wrap"/>
+              <TextBlock Text="Retención configurada: 24 horas · Límite predeterminado: 15 MB por archivo." Foreground="#91A0B8" Margin="0,12,0,0"/>
+            </StackPanel>
           </Border>
           <TextBlock Text="ImageBridge no modifica los archivos de ChatGPT ni garantiza que un modelo remoto lea enlaces externos como adjuntos nativos." Foreground="#71819A" FontSize="10" Margin="2,14,2,8" TextWrapping="Wrap"/>
         </StackPanel>
