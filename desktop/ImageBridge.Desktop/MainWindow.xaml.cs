@@ -43,11 +43,38 @@ public partial class MainWindow : Window
             "Configuración" => "Administra la dirección del servidor y tu token.",
             _ => "ImageBridge Desktop"
         };
-        if (page == "Historial" || page == "Archivos") _ = RefreshHistoryAsync();
-        if (page == "Configuración") ServerUrlBox.Focus();
-        if (page == "Subir archivos") UploadStatusText.Text = "Selecciona archivos para comenzar.";
-        if (page == "Integraciones") UploadStatusText.Text = "La extensión se instala por separado desde la carpeta extension del repositorio.";
-        if (page == "Almacenamiento") StorageCardText.Text = "El proveedor se informa en /api/health; cuotas y límites dependen de tu cuenta.";
+
+        UIElement[] panels = [OverviewCards, ConnectionPanel, UploadPanel, HistoryPanel, IntegrationsPanel, StoragePanel];
+        foreach (var panel in panels) panel.Visibility = Visibility.Collapsed;
+
+        switch (page)
+        {
+            case "Inicio":
+                OverviewCards.Visibility = Visibility.Visible;
+                ConnectionPanel.Visibility = Visibility.Visible;
+                UploadPanel.Visibility = Visibility.Visible;
+                HistoryPanel.Visibility = Visibility.Visible;
+                break;
+            case "Archivos":
+            case "Historial":
+                HistoryPanel.Visibility = Visibility.Visible;
+                _ = RefreshHistoryAsync();
+                break;
+            case "Subir archivos":
+                UploadPanel.Visibility = Visibility.Visible;
+                break;
+            case "Integraciones":
+                IntegrationsPanel.Visibility = Visibility.Visible;
+                break;
+            case "Almacenamiento":
+                OverviewCards.Visibility = Visibility.Visible;
+                StoragePanel.Visibility = Visibility.Visible;
+                break;
+            case "Configuración":
+                ConnectionPanel.Visibility = Visibility.Visible;
+                ServerUrlBox.Focus();
+                break;
+        }
     }
 
     private void SaveSettings_Click(object sender, RoutedEventArgs e)
