@@ -1,0 +1,141 @@
+<Window x:Class="ImageBridge.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ImageBridge" Height="760" Width="1180" MinHeight="650" MinWidth="980"
+        WindowStartupLocation="CenterScreen" Background="#0B1020"
+        Loaded="Window_Loaded" Closed="Window_Closed">
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="238"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+
+    <Border Grid.Column="0" Background="#10192A" BorderBrush="#26344B" BorderThickness="0,0,1,0">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Top" Margin="20,24,20,18">
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,28">
+            <Border Width="38" Height="38" CornerRadius="13" Background="#253B5D" VerticalAlignment="Center">
+              <TextBlock Text="✧" FontSize="25" Foreground="#A9CCFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+              <TextBlock Text="ImageBridge" FontSize="18" FontWeight="SemiBold"/>
+              <TextBlock Text="DESKTOP" FontSize="10" Foreground="#91A0B8"/>
+            </StackPanel>
+          </StackPanel>
+          <TextBlock Text="WORKSPACE" FontSize="10" Foreground="#71819A" Margin="4,0,0,10"/>
+          <Button Content="⌂   Inicio" Tag="Inicio" Click="Nav_Click" HorizontalContentAlignment="Left"/>
+          <Button Content="▤   Archivos" Tag="Archivos" Click="Nav_Click" HorizontalContentAlignment="Left"/>
+          <Button Content="↑   Subir archivos" Tag="Subir archivos" Click="Nav_Click" HorizontalContentAlignment="Left"/>
+          <Button Content="◷   Historial" Tag="Historial" Click="Nav_Click" HorizontalContentAlignment="Left"/>
+          <TextBlock Text="SISTEMA" FontSize="10" Foreground="#71819A" Margin="4,22,0,10"/>
+          <Button Content="⌘   Integraciones" Tag="Integraciones" Click="Nav_Click" HorizontalContentAlignment="Left"/>
+          <Button Content="◫   Almacenamiento" Tag="Almacenamiento" Click="Nav_Click" HorizontalContentAlignment="Left"/>
+          <Button Content="⚙   Configuración" Tag="Configuración" Click="Nav_Click" HorizontalContentAlignment="Left"/>
+        </StackPanel>
+        <Border DockPanel.Dock="Bottom" Margin="16" Padding="12" CornerRadius="12" Background="#162238" BorderBrush="#2A3C57" BorderThickness="1">
+          <StackPanel>
+            <TextBlock Text="ESTADO DEL SERVIDOR" FontSize="9" Foreground="#91A0B8"/>
+            <TextBlock x:Name="SidebarStatusText" Text="Sin comprobar" FontSize="12" Margin="0,6,0,0"/>
+          </StackPanel>
+        </Border>
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Column="1" Margin="30,25,30,24">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <Grid Grid.Row="0" Margin="0,0,0,22">
+        <StackPanel>
+          <TextBlock x:Name="PageTitle" Text="Inicio" FontSize="27" FontWeight="SemiBold"/>
+          <TextBlock x:Name="PageDescription" Text="Tu centro de archivos para flujos de trabajo con IA." Foreground="#91A0B8" Margin="0,5,0,0"/>
+        </StackPanel>
+        <Border HorizontalAlignment="Right" VerticalAlignment="Center" Padding="12,7" CornerRadius="20" Background="#162238" BorderBrush="#2A3C57" BorderThickness="1">
+          <StackPanel Orientation="Horizontal">
+            <Ellipse x:Name="ConnectionDot" Width="7" Height="7" Fill="#77849A" Margin="0,0,8,0" VerticalAlignment="Center"/>
+            <TextBlock x:Name="ConnectionStatusText" Text="Desconectado" FontSize="11" Foreground="#B8C5D8"/>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+          <Grid x:Name="OverviewCards" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Padding="19" CornerRadius="16" Background="#142036" BorderBrush="#2A3C57" BorderThickness="1">
+              <StackPanel>
+                <TextBlock Text="Conexión" Foreground="#91A0B8" FontSize="12"/>
+                <TextBlock x:Name="ConnectionCardText" Text="Configura tu servidor para comenzar." FontSize="18" FontWeight="SemiBold" Margin="0,8,0,5" TextWrapping="Wrap"/>
+                <TextBlock Text="ImageBridge API · HTTPS recomendado" Foreground="#91A0B8" FontSize="11"/>
+              </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Padding="19" CornerRadius="16" Background="#142036" BorderBrush="#2A3C57" BorderThickness="1">
+              <StackPanel>
+                <TextBlock Text="Almacenamiento" Foreground="#91A0B8" FontSize="12"/>
+                <TextBlock x:Name="StorageCardText" Text="Cloudinary / servidor local" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,5"/>
+                <TextBlock Text="La cuota depende del proveedor conectado." Foreground="#91A0B8" FontSize="11"/>
+              </StackPanel>
+            </Border>
+          </Grid>
+
+          <Border x:Name="ConnectionPanel" Padding="20" CornerRadius="16" Background="#121A2B" BorderBrush="#26344B" BorderThickness="1" Margin="0,0,0,16">
+            <StackPanel>
+              <TextBlock Text="Conectar ImageBridge" FontSize="17" FontWeight="SemiBold"/>
+              <TextBlock Text="Introduce la dirección del Worker o del servidor local." Foreground="#91A0B8" Margin="0,5,0,14" FontSize="12"/>
+              <TextBlock Text="URL del servidor" FontSize="12" Foreground="#B8C5D8"/>
+              <TextBox x:Name="ServerUrlBox" Text="http://127.0.0.1:3000"/>
+              <TextBlock Text="Token de ImageBridge" FontSize="12" Foreground="#B8C5D8"/>
+              <PasswordBox x:Name="ApiTokenBox"/>
+              <WrapPanel>
+                <Button Content="Guardar configuración" Click="SaveSettings_Click" Background="#29446B"/>
+                <Button Content="Probar conexión" Click="Connect_Click"/>
+              </WrapPanel>
+              <TextBlock x:Name="SettingsStatusText" Text="El token se guarda cifrado para tu usuario de Windows." Foreground="#91A0B8" FontSize="11" Margin="0,12,0,0"/>
+            </StackPanel>
+          </Border>
+
+          <Border x:Name="UploadPanel" Padding="20" CornerRadius="16" Background="#121A2B" BorderBrush="#26344B" BorderThickness="1" Margin="0,0,0,16">
+            <StackPanel>
+              <TextBlock Text="Subir archivos" FontSize="17" FontWeight="SemiBold"/>
+              <TextBlock Text="Selecciona imágenes o documentos compatibles. Los archivos se envían al servidor configurado." Foreground="#91A0B8" Margin="0,5,0,14" FontSize="12" TextWrapping="Wrap"/>
+              <WrapPanel>
+                <Button Content="Seleccionar archivos…" Click="SelectUpload_Click" Background="#29446B"/>
+                <Button Content="Actualizar historial" Click="RefreshHistory_Click"/>
+              </WrapPanel>
+              <TextBlock x:Name="UploadStatusText" Text="No hay cargas recientes." Foreground="#91A0B8" FontSize="11" Margin="0,12,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+
+          <Border x:Name="HistoryPanel" Padding="20" CornerRadius="16" Background="#121A2B" BorderBrush="#26344B" BorderThickness="1">
+            <DockPanel>
+              <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+                <TextBlock Text="Historial reciente" FontSize="17" FontWeight="SemiBold"/>
+                <TextBlock Text="  ·  archivos del servidor" FontSize="11" Foreground="#91A0B8" VerticalAlignment="Center"/>
+              </StackPanel>
+              <ListBox x:Name="HistoryList" Background="Transparent" BorderThickness="0" Foreground="#E8EEF8" MinHeight="90" MaxHeight="230"/>
+            </DockPanel>
+          </Border>
+          <Border x:Name="IntegrationsPanel" Visibility="Collapsed" Padding="22" CornerRadius="16" Background="#121A2B" BorderBrush="#26344B" BorderThickness="1" Margin="0,0,0,16">
+            <StackPanel>
+              <TextBlock Text="Integraciones disponibles" FontSize="18" FontWeight="SemiBold"/>
+              <TextBlock Text="ChatGPT Web" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,4"/>
+              <TextBlock Text="La extensión de Chrome o Edge añade ✧ ImageBridge al menú + de chatgpt.com. La extensión se instala desde la carpeta extension del repositorio." Foreground="#91A0B8" TextWrapping="Wrap"/>
+              <TextBlock Text="Codex y herramientas compatibles" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,4"/>
+              <TextBlock Text="El repositorio incluye una Skill/CLI para flujos que pueden invocar ImageBridge. Esta aplicación de escritorio administra el servidor y los archivos; no modifica la aplicación nativa de ChatGPT." Foreground="#91A0B8" TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+          <Border x:Name="StoragePanel" Visibility="Collapsed" Padding="22" CornerRadius="16" Background="#121A2B" BorderBrush="#26344B" BorderThickness="1" Margin="0,0,0,16">
+            <StackPanel>
+              <TextBlock Text="Proveedor de almacenamiento" FontSize="18" FontWeight="SemiBold"/>
+              <TextBlock Text="Cloudinary" FontSize="15" FontWeight="SemiBold" Margin="0,14,0,4"/>
+              <TextBlock Text="El Worker guarda imágenes y documentos como recursos autenticados y los entrega mediante enlaces temporales. El uso y los límites dependen del plan de Cloudinary." Foreground="#91A0B8" TextWrapping="Wrap"/>
+              <TextBlock Text="Retención configurada: 24 horas · Límite predeterminado: 15 MB por archivo." Foreground="#91A0B8" Margin="0,12,0,0"/>
+            </StackPanel>
+          </Border>
+          <TextBlock Text="ImageBridge no modifica los archivos de ChatGPT ni garantiza que un modelo remoto lea enlaces externos como adjuntos nativos." Foreground="#71819A" FontSize="10" Margin="2,14,2,8" TextWrapping="Wrap"/>
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
+</Window>

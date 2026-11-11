@@ -5,13 +5,12 @@
   "compatibility_date": "2026-11-08",
   "workers_dev": true,
   "observability": { "enabled": true },
-  "r2_buckets": [
-    { "binding": "FILES", "bucket_name": "imagebridge-files" }
-  ],
   "triggers": {
     "crons": ["17 * * * *"]
   },
   "vars": {
+    "CLOUDINARY_CLOUD_NAME": "wbrowqwj",
+    "CLOUDINARY_API_KEY": "378881355659812",
     "MAX_UPLOAD_MB": "15",
     "TTL_HOURS": "24"
   }
