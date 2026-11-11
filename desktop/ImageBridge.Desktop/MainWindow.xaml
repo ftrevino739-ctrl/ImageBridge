@@ -27,7 +27,7 @@
           <Button Content="▤   Archivos" Tag="Archivos" Click="Nav_Click" HorizontalContentAlignment="Left"/>
           <Button Content="↑   Subir archivos" Tag="Subir archivos" Click="Nav_Click" HorizontalContentAlignment="Left"/>
           <Button Content="◷   Historial" Tag="Historial" Click="Nav_Click" HorizontalContentAlignment="Left"/>
-          <TextBlock Text="SISTEMA" FontSize="10" Foreground="#71819A" Margin="4,22,0,10" CharacterSpacing="130"/>
+          <TextBlock Text="SISTEMA" FontSize="10" Foreground="#71819A" Margin="4,22,0,10"/>
           <Button Content="⌘   Integraciones" Tag="Integraciones" Click="Nav_Click" HorizontalContentAlignment="Left"/>
           <Button Content="◫   Almacenamiento" Tag="Almacenamiento" Click="Nav_Click" HorizontalContentAlignment="Left"/>
           <Button Content="⚙   Configuración" Tag="Configuración" Click="Nav_Click" HorizontalContentAlignment="Left"/>
