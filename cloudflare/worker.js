@@ -120,7 +120,7 @@ async function signedCloudinaryPost(env, resourceType, action, params, file) {
   return data;
 }
 async function destroyAsset(env, resourceType, publicId) {
-  return signedCloudinaryPost(env, resourceType, "destroy", { public_id: publicId, invalidate: "true" });
+  return signedCloudinaryPost(env, resourceType, "destroy", { public_id: publicId, type: "authenticated", invalidate: "true" });
 }
 function publicDeliveryUrl(env, payload) {
   const encodedId = payload.publicId.split("/").map(encodeURIComponent).join("/");
@@ -202,7 +202,7 @@ async function listResources(env, resourceType) {
   const all = [];
   let cursor = "";
   for (let page = 0; page < 10; page++) {
-    const url = new URL(cloudinaryBase(env) + "/resources/" + resourceType + "/upload");
+    const url = new URL(cloudinaryBase(env) + "/resources/" + resourceType + "/authenticated");
     url.searchParams.set("prefix", PREFIX);
     url.searchParams.set("max_results", "500");
     url.searchParams.set("context", "true");
