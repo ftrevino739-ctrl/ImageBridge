@@ -113,7 +113,7 @@ async function signedCloudinaryPost(env, resourceType, action, params, file) {
   form.append("signature", signature);
   if (file) form.append("file", file);
   const response = await fetch(cloudinaryBase(env) + "/" + resourceType + "/" + action, {
-    method: "POST", headers: { Authorization: cloudinaryAuth(env) }, body: form
+    method: "POST", body: form
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error?.message || "Cloudinary request failed (" + response.status + ").");
