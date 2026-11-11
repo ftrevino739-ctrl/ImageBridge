@@ -65,6 +65,10 @@ Cloudinary API references:
 - [Authenticated delivery URL signatures](https://cloudinary.com/documentation/delivery_url_signatures)
 - [Asset deletion](https://cloudinary.com/documentation/delete_assets)
 
+## Tests
+
+Run the automated checks with `npm test`. The Cloudinary Worker tests mock Cloudinary's HTTP API and do not require account credentials or a live deployment.
+
 ## Local server (optional)
 
 Requires Node.js 20+.
