@@ -120,71 +120,127 @@
     }
   }
 
+  let lastPlusClickAt = 0;
+
+  const PLUS_MENU_MARKERS = [
+    "recent files", "create image", "deep research", "web search", "search web",
+    "use connectors", "agent mode", "projects", "add from google drive",
+    "add from onedrive", "take photo", "take a photo", "more"
+  ];
+
+  function isVisible(element) {
+    if (!element?.isConnected || !element.getClientRects().length) return false;
+    const style = getComputedStyle(element);
+    return style.display !== "none" && style.visibility !== "hidden";
+  }
+
+  function elementLabel(element) {
+    return normalize([
+      element.getAttribute("aria-label"),
+      element.getAttribute("data-testid"),
+      element.innerText,
+      element.textContent
+    ].filter(Boolean).join(" "));
+  }
+
   function findAddPhotosMenuItem() {
     const candidates = [...document.querySelectorAll(
       '[role="menuitem"], [role="option"], [data-radix-collection-item], [tabindex="0"], [role="button"], button'
-    )].filter(element => element.isConnected && element.getClientRects().length);
+    )].filter(isVisible);
 
     const matches = candidates.map(element => {
-      const text = normalize([
-        element.getAttribute("aria-label"),
-        element.getAttribute("data-testid"),
-        element.innerText,
-        element.textContent
-      ].filter(Boolean).join(" "));
-      const english = text.includes("add photos") && text.includes("files");
-      const spanish = (text.includes("agregar") || text.includes("añadir")) &&
-        (text.includes("fotos") || text.includes("imágenes")) &&
-        (text.includes("archivos") || text.includes("ficheros"));
-      return { element, text, matches: english || spanish };
-    }).filter(item => item.matches && item.text.length < 180);
+      const text = elementLabel(element);
+      const english = (
+        (text.includes("add photos") || text.includes("add file") || text.includes("upload") || text.includes("attach")) &&
+        (text.includes("file") || text.includes("photo") || text.includes("image"))
+      );
+      const spanish = (
+        (text.includes("agregar") || text.includes("añadir") || text.includes("adjuntar") || text.includes("subir")) &&
+        (text.includes("fotos") || text.includes("imágenes") || text.includes("archivos") || text.includes("ficheros"))
+      );
+      const exact = ADD_PHOTOS_LABELS.some(label => text.includes(normalize(label)));
+      return { element, text, matches: english || spanish || exact };
+    }).filter(item => item.matches && item.text.length < 220);
 
     matches.sort((a, b) => a.text.length - b.text.length);
     return matches[0]?.element || null;
   }
 
-  function installPlusMenuItem() {
-    const nativeItem = findAddPhotosMenuItem();
-    if (!nativeItem?.parentElement) return false;
-    if (nativeItem.parentElement.querySelector('[data-imagebridge-menu-item="true"]')) return true;
+  function findFallbackPlusMenuItem() {
+    // Fallback is only allowed immediately after the user opens the composer + menu.
+    // This prevents adding ImageBridge to unrelated menus elsewhere in ChatGPT.
+    if (!lastPlusClickAt || Date.now() - lastPlusClickAt > 5000) return null;
 
-    // Clone the actual visible native row to inherit ChatGPT's menu layout and theme.
-    const item = nativeItem.cloneNode(true);
+    const menuRoots = [...document.querySelectorAll(
+      '[role="menu"], [data-radix-popper-content-wrapper], [role="listbox"]'
+    )].filter(isVisible);
+
+    const ranked = menuRoots.map(root => {
+      const rows = [...root.querySelectorAll(
+        '[role="menuitem"], [role="option"], [data-radix-collection-item], button'
+      )].filter(isVisible);
+      const text = normalize(root.innerText || root.textContent);
+      const markerCount = PLUS_MENU_MARKERS.filter(marker => text.includes(marker)).length;
+      return { root, rows, markerCount, score: markerCount * 10 + rows.length };
+    }).filter(entry => entry.rows.length >= 2);
+
+    ranked.sort((a, b) => b.score - a.score);
+    const chosen = ranked[0];
+    if (!chosen) return null;
+
+    // Prefer a recognizable attachment-related row; otherwise use the first row
+    // of the currently open menu, which is known to have been opened by the + button.
+    return chosen.rows.find(row => {
+      const text = elementLabel(row);
+      return /photo|file|upload|attach|imagen|archivo|fichero|recent files/i.test(text);
+    }) || chosen.rows[0];
+  }
+
+  function installPlusMenuItem() {
+    const sourceItem = findAddPhotosMenuItem() || findFallbackPlusMenuItem();
+    if (!sourceItem?.parentElement) return false;
+
+    const parent = sourceItem.parentElement;
+    if (parent.querySelector('[data-imagebridge-menu-item="true"]')) return true;
+
+    // Clone a native row to inherit ChatGPT's current menu layout and theme.
+    const item = sourceItem.cloneNode(true);
     item.removeAttribute("id");
     item.removeAttribute("data-testid");
     item.removeAttribute("aria-controls");
     item.removeAttribute("aria-describedby");
-    item.querySelectorAll("[id], [data-testid], [aria-controls], [aria-describedby]").forEach(node => {
+    item.removeAttribute("aria-labelledby");
+    item.removeAttribute("aria-checked");
+    item.removeAttribute("aria-selected");
+    item.querySelectorAll("[id], [data-testid], [aria-controls], [aria-describedby], [aria-labelledby]").forEach(node => {
       node.removeAttribute("id");
       node.removeAttribute("data-testid");
       node.removeAttribute("aria-controls");
       node.removeAttribute("aria-describedby");
+      node.removeAttribute("aria-labelledby");
     });
     item.dataset.imagebridgeMenuItem = "true";
     item.setAttribute("aria-label", "ImageBridge");
     item.setAttribute("title", "Seleccionar archivos con ImageBridge");
     if (item.tagName === "BUTTON") item.type = "button";
     else {
-      item.setAttribute("role", nativeItem.getAttribute("role") || "menuitem");
-      item.tabIndex = nativeItem.tabIndex >= 0 ? nativeItem.tabIndex : 0;
+      item.setAttribute("role", sourceItem.getAttribute("role") || "menuitem");
+      item.tabIndex = sourceItem.tabIndex >= 0 ? sourceItem.tabIndex : 0;
     }
 
     const textWalker = document.createTreeWalker(item, NodeFilter.SHOW_TEXT);
-    let labelTextNode = null;
+    const textNodes = [];
     while (textWalker.nextNode()) {
-      const candidate = normalize(textWalker.currentNode.nodeValue);
-      if ((candidate.includes("add photos") && candidate.includes("files")) ||
-          ((candidate.includes("agregar") || candidate.includes("añadir")) &&
-           (candidate.includes("fotos") || candidate.includes("imágenes")) &&
-           (candidate.includes("archivos") || candidate.includes("ficheros")))) {
-        labelTextNode = textWalker.currentNode;
-        break;
-      }
+      if (normalize(textWalker.currentNode.nodeValue)) textNodes.push(textWalker.currentNode);
     }
-    if (labelTextNode) labelTextNode.nodeValue = "✧ ImageBridge";
-    else {
-      const label = item.querySelector("span, p, div") || item;
+    textNodes.sort((a, b) => normalize(b.nodeValue).length - normalize(a.nodeValue).length);
+    if (textNodes.length) {
+      textNodes[0].nodeValue = "✧ ImageBridge";
+      for (const node of textNodes.slice(1)) node.nodeValue = "";
+    } else {
+      const label = document.createElement("span");
       label.textContent = "✧ ImageBridge";
+      item.append(label);
     }
 
     item.addEventListener("click", event => {
@@ -199,7 +255,7 @@
         item.click();
       }
     });
-    nativeItem.parentElement.insertBefore(item, nativeItem.nextSibling);
+    parent.insertBefore(item, sourceItem.nextSibling);
     console.info("[ImageBridge] Added ImageBridge to ChatGPT's + menu.");
     return true;
   }
@@ -384,16 +440,21 @@
   }
 
   function installPlusButtonHook() {
-    const plus = document.querySelector('[data-testid="composer-plus-btn"], button[aria-label*="Add files and more" i], button[aria-label*="Agregar archivos" i], button[aria-label*="Adjuntar archivos" i]');
+    const plus = document.querySelector(
+      '[data-testid="composer-plus-btn"], button[aria-label*="Add files and more" i], ' +
+      'button[aria-label*="Add files" i], button[aria-label*="Agregar archivos" i], ' +
+      'button[aria-label*="Adjuntar archivos" i]'
+    );
     if (!plus || plus.dataset.imageBridgePlusHook === "true") return;
     plus.dataset.imageBridgePlusHook = "true";
     plus.addEventListener("click", () => {
-      // ChatGPT mounts the popover asynchronously. Retry after its menu rows exist.
-      for (const delay of [40, 120, 260, 500]) {
+      lastPlusClickAt = Date.now();
+      // ChatGPT mounts the popover asynchronously; retry while the menu is rendered.
+      for (const delay of [40, 120, 260, 500, 850, 1200]) {
         setTimeout(() => {
           const inserted = installPlusMenuItem();
-          if (!inserted && delay === 500) {
-            console.warn("[ImageBridge] Could not find the Add photos & files row. Check the current ChatGPT menu labels/DOM.");
+          if (!inserted && delay === 1200) {
+            console.warn("[ImageBridge] Could not inject into the composer + menu. Open DevTools Console and check the [ImageBridge] messages.");
           }
         }, delay);
       }
