@@ -141,7 +141,7 @@
         </StackPanel>
         <Border HorizontalAlignment="Right" VerticalAlignment="Center" Padding="13,8" CornerRadius="18" Background="#142238" BorderBrush="#2A3C57" BorderThickness="1">
           <StackPanel Orientation="Horizontal">
-            <Ellipse Width="7" Height="7" Fill="#77849A" Margin="0,0,8,0" VerticalAlignment="Center"/>
+            <Ellipse x:Name="HeaderConnectionDot" Width="7" Height="7" Fill="#77849A" Margin="0,0,8,0" VerticalAlignment="Center"/>
             <TextBlock x:Name="ConnectionStatusText" Text="Desconectado" FontSize="11" Foreground="#C0CDE0"/>
           </StackPanel>
         </Border>
@@ -206,7 +206,7 @@
                     <TextBlock Text="Actividad reciente" Style="{StaticResource SectionTitle}"/>
                     <TextBlock Text="Últimos archivos registrados en tu servidor" FontSize="11" Foreground="#8294AD" Margin="0,4,0,0"/>
                   </StackPanel>
-                  <Button Content="Actualizar" Click="RefreshHistory_Click" HorizontalAlignment="Right" Margin="Auto,0,0,0"/>
+                  <Button Content="Actualizar" Click="RefreshHistory_Click" HorizontalAlignment="Right" Margin="0,0,0,0"/>
                 </StackPanel>
                 <ListBox x:Name="HistoryList" MinHeight="125" MaxHeight="240"/>
               </DockPanel>
