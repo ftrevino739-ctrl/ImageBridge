@@ -7,7 +7,7 @@ namespace ImageBridge.Desktop.Services;
 
 public sealed class AppSettings
 {
-    public string ServerUrl { get; set; } = "http://127.0.0.1:3000";
+    public string ServerUrl { get; set; } = "https://imagebridge-storage.fert0480.workers.dev";
     public string ProtectedToken { get; set; } = "";
 }
 
