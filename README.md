@@ -3,17 +3,17 @@
 **A companion file bridge for AI workflows.**
 
 ImageBridge currently contains:
-- A Chrome/Edge extension that adds `✧ ImageBridge` to ChatGPT Web's **+** menu.
+- A Chrome/Edge extension that adds one `✧` upload button directly beside ChatGPT Web's composer **+** button.
 - A local Node.js file server for private/local testing.
 - A Cloudflare Worker backend that stores files in Cloudinary and serves short-lived, authenticated links.
 - A Codex/ChatGPT Skill integration.
 
-The Windows Desktop application is a planned product component and is **not included in the current release yet**. It will be built as a real standalone manager, not as a patcher for ChatGPT.
+The intended user interface is the single composer button. A separate multi-page Windows dashboard is not part of this workflow.
 
 ## How the ChatGPT Web extension works
 
 1. Open ChatGPT Web in Chrome or Edge.
-2. Click **+ → ✧ ImageBridge**.
+2. Click the single **✧** button immediately beside ChatGPT's composer **+** button.
 3. Select images or documents from Windows.
 4. ImageBridge uploads them and shows preview cards in the composer.
 5. When you send, the extension adds a temporary ImageBridge URL to the message and keeps a local preview in the sent message.
@@ -87,9 +87,9 @@ The local server binds to `127.0.0.1:3000` by default. Check `http://127.0.0.1:3
 2. Enable **Developer mode**.
 3. Choose **Load unpacked** and select this repository's `extension` folder.
 4. Open `https://chatgpt.com` in the same browser profile.
-5. Use **+ → ✧ ImageBridge**.
+5. Use the single **✧** button beside the composer **+** button.
 
-The toolbar icon opens extension settings; it is not the file picker.
+The browser toolbar icon opens one-time settings (Worker URL and private token). The only in-chat control is the single ✧ upload button beside +.
 
 ## Windows Desktop application
 
