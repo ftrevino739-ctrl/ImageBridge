@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ImageBridge Mod",
-  "version": "1.2.1",
-  "description": "Add ImageBridge as an option inside ChatGPT's + file menu with inline previews.",
+  "version": "1.3.0",
+  "description": "Adds one ImageBridge upload button beside ChatGPT's composer + button.",
   "permissions": [
     "storage"
   ],

@@ -1,4 +1,4 @@
-const DEFAULTS = { serverUrl: "http://127.0.0.1:3000", apiToken: "" };
+const DEFAULTS = { serverUrl: "https://imagebridge-storage.fert0480.workers.dev", apiToken: "" };
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "IMAGEBRIDGE_CONFIG") {
@@ -20,6 +20,7 @@ async function upload(file) {
   if (parsed.protocol !== "https:" && !(local && parsed.protocol === "http:")) {
     throw new Error("Remote ImageBridge servers must use HTTPS.");
   }
+  if (!config.apiToken) throw new Error("Falta el token de ImageBridge. Abre la configuración de la extensión y guárdalo.");
   if (!file?.data || !file?.name || !file?.type) throw new Error("Missing image data.");
   const binary = atob(file.data);
   const bytes = new Uint8Array(binary.length);
