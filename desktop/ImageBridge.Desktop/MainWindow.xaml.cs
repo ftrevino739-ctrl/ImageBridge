@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -33,47 +34,48 @@ public partial class MainWindow : Window
     private void Nav_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button button || button.Tag is not string page) return;
+
         PageTitle.Text = page;
         PageDescription.Text = page switch
         {
-            "Inicio" => "Tu centro de archivos para flujos de trabajo con IA.",
-            "Archivos" => "Consulta los archivos que has enviado al servidor.",
-            "Subir archivos" => "Selecciona imágenes y documentos desde Windows.",
-            "Historial" => "Revisa las cargas registradas en el servidor.",
-            "Integraciones" => "Conecta ImageBridge con ChatGPT Web y herramientas compatibles.",
-            "Almacenamiento" => "Estado del proveedor y límites de almacenamiento.",
-            "Configuración" => "Administra la dirección del servidor y tu token.",
+            "Inicio" => "Tu centro de control para archivos y conexiones de IA.",
+            "Archivos" => "Consulta los archivos que siguen disponibles en tu almacenamiento.",
+            "Subir archivos" => "Envía imágenes y documentos desde Windows a tu servidor.",
+            "Historial" => "Revisa la actividad reciente de ImageBridge.",
+            "Integraciones" => "Administra las conexiones de ImageBridge con otras herramientas.",
+            "Almacenamiento" => "Consulta el proveedor y las políticas de retención.",
+            "Configuración" => "Administra la dirección del servidor y tu token privado.",
             _ => "ImageBridge Desktop"
         };
 
-        UIElement[] panels = [OverviewCards, ConnectionPanel, UploadPanel, HistoryPanel, IntegrationsPanel, StoragePanel];
-        foreach (var panel in panels) panel.Visibility = Visibility.Collapsed;
+        UIElement[] pages = [HomePage, FilesPage, UploadPage, ActivityPage, IntegrationsPage, StoragePage, SettingsPage];
+        foreach (var panel in pages) panel.Visibility = Visibility.Collapsed;
 
         switch (page)
         {
             case "Inicio":
-                OverviewCards.Visibility = Visibility.Visible;
-                ConnectionPanel.Visibility = Visibility.Visible;
-                UploadPanel.Visibility = Visibility.Visible;
-                HistoryPanel.Visibility = Visibility.Visible;
+                HomePage.Visibility = Visibility.Visible;
+                _ = RefreshHistoryAsync();
                 break;
             case "Archivos":
-            case "Historial":
-                HistoryPanel.Visibility = Visibility.Visible;
+                FilesPage.Visibility = Visibility.Visible;
                 _ = RefreshHistoryAsync();
                 break;
             case "Subir archivos":
-                UploadPanel.Visibility = Visibility.Visible;
+                UploadPage.Visibility = Visibility.Visible;
+                break;
+            case "Historial":
+                ActivityPage.Visibility = Visibility.Visible;
+                _ = RefreshHistoryAsync();
                 break;
             case "Integraciones":
-                IntegrationsPanel.Visibility = Visibility.Visible;
+                IntegrationsPage.Visibility = Visibility.Visible;
                 break;
             case "Almacenamiento":
-                OverviewCards.Visibility = Visibility.Visible;
-                StoragePanel.Visibility = Visibility.Visible;
+                StoragePage.Visibility = Visibility.Visible;
                 break;
             case "Configuración":
-                ConnectionPanel.Visibility = Visibility.Visible;
+                SettingsPage.Visibility = Visibility.Visible;
                 ServerUrlBox.Focus();
                 break;
         }
@@ -99,22 +101,47 @@ public partial class MainWindow : Window
             SaveSettings();
             ConnectionStatusText.Text = "Comprobando…";
             SidebarStatusText.Text = "Conectando…";
-            var response = await _http.GetAsync(GetServerUrl() + "/api/health");
-            var body = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode) throw new InvalidOperationException(ReadError(body, (int)response.StatusCode));
-            using var json = JsonDocument.Parse(body);
-            var root = json.RootElement;
-            var storage = root.TryGetProperty("storage", out var storageValue) ? storageValue.GetString() : "Servidor local";
+
+            using var healthResponse = await _http.GetAsync(GetServerUrl() + "/api/health");
+            var healthBody = await healthResponse.Content.ReadAsStringAsync();
+            if (!healthResponse.IsSuccessStatusCode)
+                throw new InvalidOperationException(ReadError(healthBody, (int)healthResponse.StatusCode));
+
+            using var healthJson = JsonDocument.Parse(healthBody);
+            var root = healthJson.RootElement;
+            var storage = root.TryGetProperty("storage", out var storageValue)
+                ? storageValue.GetString() : "Servidor local";
             var configured = !root.TryGetProperty("configured", out var configuredValue) || configuredValue.GetBoolean();
+            if (!configured)
+                throw new InvalidOperationException("El servidor responde, pero el proveedor de almacenamiento no está configurado.");
+
+            // Health is public. A successful authenticated history request verifies the saved token too.
+            using var historyRequest = new HttpRequestMessage(HttpMethod.Get, GetServerUrl() + "/api/history");
+            AddAuthorization(historyRequest);
+            using var historyResponse = await _http.SendAsync(historyRequest);
+            var historyBody = await historyResponse.Content.ReadAsStringAsync();
+            if (historyResponse.StatusCode == HttpStatusCode.Unauthorized)
+                throw new InvalidOperationException("El servidor responde, pero el token privado no coincide. Pega el token actual en Configuración y vuelve a probar.");
+            if (!historyResponse.IsSuccessStatusCode)
+                throw new InvalidOperationException(ReadError(historyBody, (int)historyResponse.StatusCode));
+
             StorageCardText.Text = storage ?? "Servidor conectado";
-            ConnectionCardText.Text = configured ? "Servidor disponible" : "Falta configurar Cloudinary";
-            SetConnectionState(configured, configured ? "Conectado" : "Conectado · falta configurar proveedor");
-            SettingsStatusText.Text = "El servidor respondió correctamente.";
+            StorageProviderText.Text = storage ?? "Conectado";
+            if (root.TryGetProperty("ttlHours", out var ttlValue) && ttlValue.TryGetInt32(out var ttl))
+                RetentionText.Text = ttl == 1 ? "1 hora" : $"{ttl} horas";
+            if (root.TryGetProperty("maxUploadMB", out var maxValue) && maxValue.TryGetInt32(out var max))
+                UploadLimitText.Text = $"Límite por archivo: {max} MB";
+
+            using var historyJson = JsonDocument.Parse(historyBody);
+            PopulateHistory(historyJson.RootElement);
+            ConnectionCardText.Text = "Servidor y token verificados";
+            SetConnectionState(true, "Conectado");
+            SettingsStatusText.Text = "Conexión verificada: servidor, almacenamiento y token privado funcionan.";
         }
         catch (Exception ex)
         {
-            SetConnectionState(false, "Sin conexión");
-            ConnectionCardText.Text = "No se pudo conectar";
+            SetConnectionState(false, "Error de conexión");
+            ConnectionCardText.Text = "Revisar conexión";
             SettingsStatusText.Text = ex.Message;
         }
     }
@@ -159,7 +186,8 @@ public partial class MainWindow : Window
         AddAuthorization(request);
         using var response = await _http.SendAsync(request);
         var body = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode) throw new InvalidOperationException(ReadError(body, (int)response.StatusCode));
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException(ReadError(body, (int)response.StatusCode));
     }
 
     private async void RefreshHistory_Click(object sender, RoutedEventArgs e) => await RefreshHistoryAsync();
@@ -173,30 +201,72 @@ public partial class MainWindow : Window
             AddAuthorization(request);
             using var response = await _http.SendAsync(request);
             var body = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode) throw new InvalidOperationException(ReadError(body, (int)response.StatusCode));
-            using var json = JsonDocument.Parse(body);
-            HistoryList.Items.Clear();
-            if (!json.RootElement.TryGetProperty("images", out var images) || images.ValueKind != JsonValueKind.Array)
+            if (!response.IsSuccessStatusCode)
             {
-                HistoryList.Items.Add("El servidor no devolvió una lista de archivos.");
+                var error = ReadError(body, (int)response.StatusCode);
+                ClearHistory(error);
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    SetConnectionState(false, "Token incorrecto");
                 return;
             }
-            foreach (var item in images.EnumerateArray())
-            {
-                var name = item.TryGetProperty("name", out var nameValue) ? nameValue.GetString() : "Archivo";
-                var size = item.TryGetProperty("size", out var sizeValue) ? sizeValue.GetInt64() : 0;
-                var expires = item.TryGetProperty("expiresAt", out var expiresValue) && expiresValue.TryGetInt64(out var millis)
-                    ? DateTimeOffset.FromUnixTimeMilliseconds(millis).ToLocalTime().ToString("g")
-                    : "sin fecha";
-                HistoryList.Items.Add($"{name}   ·   {FormatSize(size)}   ·   vence {expires}");
-            }
-            if (HistoryList.Items.Count == 0) HistoryList.Items.Add("No hay archivos en el historial.");
+
+            using var json = JsonDocument.Parse(body);
+            PopulateHistory(json.RootElement);
+            SetConnectionState(true, "Conectado");
         }
         catch (Exception ex)
         {
-            HistoryList.Items.Clear();
-            HistoryList.Items.Add("No se pudo cargar el historial: " + ex.Message);
+            ClearHistory("No se pudo cargar el historial: " + ex.Message);
         }
+    }
+
+    private void PopulateHistory(JsonElement root)
+    {
+        HistoryList.Items.Clear();
+        FilesList.Items.Clear();
+        ActivityList.Items.Clear();
+
+        if (!root.TryGetProperty("images", out var images) || images.ValueKind != JsonValueKind.Array)
+        {
+            ClearHistory("El servidor no devolvió una lista de archivos.");
+            return;
+        }
+
+        var count = 0;
+        foreach (var item in images.EnumerateArray())
+        {
+            var name = item.TryGetProperty("name", out var nameValue) ? nameValue.GetString() : "Archivo";
+            var size = item.TryGetProperty("size", out var sizeValue) ? sizeValue.GetInt64() : 0;
+            var mime = item.TryGetProperty("mime", out var mimeValue) ? mimeValue.GetString() : "tipo desconocido";
+            var created = item.TryGetProperty("createdAt", out var createdValue) && createdValue.TryGetInt64(out var createdMs)
+                ? DateTimeOffset.FromUnixTimeMilliseconds(createdMs).ToLocalTime().ToString("g") : "fecha desconocida";
+            var expires = item.TryGetProperty("expiresAt", out var expiresValue) && expiresValue.TryGetInt64(out var expiresMs)
+                ? DateTimeOffset.FromUnixTimeMilliseconds(expiresMs).ToLocalTime().ToString("g") : "sin fecha";
+            var line = $"{name}   ·   {FormatSize(size)}   ·   {mime}   ·   vence {expires}";
+            HistoryList.Items.Add(line);
+            FilesList.Items.Add(line);
+            ActivityList.Items.Add($"{created}   —   {name}   ·   {FormatSize(size)}");
+            count++;
+        }
+
+        FileCountText.Text = count.ToString();
+        if (count == 0)
+        {
+            HistoryList.Items.Add("Todavía no hay archivos en el servidor.");
+            FilesList.Items.Add("Tu biblioteca está vacía. Sube tu primer archivo para comenzar.");
+            ActivityList.Items.Add("Todavía no hay actividad registrada.");
+        }
+    }
+
+    private void ClearHistory(string message)
+    {
+        HistoryList.Items.Clear();
+        FilesList.Items.Clear();
+        ActivityList.Items.Clear();
+        HistoryList.Items.Add(message);
+        FilesList.Items.Add(message);
+        ActivityList.Items.Add(message);
+        FileCountText.Text = "—";
     }
 
     private void SaveSettings()
@@ -213,21 +283,27 @@ public partial class MainWindow : Window
     private string GetServerUrl()
     {
         var server = ServerUrlBox.Text.Trim().TrimEnd('/');
-        if (!Uri.TryCreate(server, UriKind.Absolute, out var uri)) throw new InvalidOperationException("La URL del servidor no es válida.");
+        if (!Uri.TryCreate(server, UriKind.Absolute, out var uri))
+            throw new InvalidOperationException("La URL del servidor no es válida.");
         return uri.GetLeftPart(UriPartial.Authority).TrimEnd('/');
     }
 
     private void AddAuthorization(HttpRequestMessage request)
     {
         var token = ApiTokenBox.Password.Trim();
-        if (!string.IsNullOrEmpty(token)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        if (!string.IsNullOrEmpty(token))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
     private void SetConnectionState(bool connected, string label)
     {
         ConnectionStatusText.Text = label;
         SidebarStatusText.Text = label;
-        ConnectionDot.Fill = connected ? new SolidColorBrush(Color.FromRgb(90, 205, 151)) : new SolidColorBrush(Color.FromRgb(119, 132, 154));
+        var brush = connected
+            ? new SolidColorBrush(Color.FromRgb(90, 205, 151))
+            : new SolidColorBrush(Color.FromRgb(220, 155, 105));
+        ConnectionDot.Fill = brush;
+        HeaderConnectionDot.Fill = brush;
     }
 
     private static string ReadError(string body, int status)
@@ -235,7 +311,8 @@ public partial class MainWindow : Window
         try
         {
             using var json = JsonDocument.Parse(body);
-            if (json.RootElement.TryGetProperty("error", out var error)) return error.GetString() ?? $"Error HTTP {status}.";
+            if (json.RootElement.TryGetProperty("error", out var error))
+                return error.GetString() ?? $"Error HTTP {status}.";
         }
         catch { }
         return $"Error HTTP {status}.";
