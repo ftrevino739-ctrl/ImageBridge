@@ -8,7 +8,7 @@ ImageBridge currently contains:
 - A Cloudflare Worker backend that stores files in Cloudinary and serves short-lived, authenticated links.
 - A Codex/ChatGPT Skill integration.
 
-The Windows Desktop application is a planned product component and is **not included in the current release yet**. It will be built as a real standalone manager, not as a patcher for ChatGPT.
+The Windows Desktop application is included under `desktop/ImageBridge.Desktop/`. It is an early standalone WPF manager for server connection, uploads, file history, integrations, storage details, and settings. It does not patch ChatGPT Desktop or turn hosted links into native attachments.
 
 ## How the ChatGPT Web extension works
 
@@ -50,8 +50,7 @@ From the repository folder in PowerShell:
    ```
 3. Save the Cloudinary API secret as a Worker secret:
    `npx wrangler secret put CLOUDINARY_API_SECRET`
-4. Save the generated ImageBridge token:
-   `npx wrangler secret put IMAGEBRIDGE_API_TOKEN`
+4. If prompted, paste the generated token into the secret prompt. Keep it private and retain it locally for configuring the extension/Desktop.
 5. Deploy:
    `npx wrangler deploy`
 6. Open `https://YOUR-WORKER.workers.dev/api/health`. Confirm `storage: "Cloudinary"` and `configured: true`.
