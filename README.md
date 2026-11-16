@@ -43,18 +43,18 @@ From the repository folder in PowerShell:
 
 1. Sign in to Cloudflare:
    `npx wrangler login`
-2. Create a strong ImageBridge API token:
+2. Generate and save the ImageBridge token directly to the Worker:
    ```powershell
-   $token = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLower()
-   $token
+   $token = [guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N")
+   $token | npx wrangler secret put IMAGEBRIDGE_API_TOKEN --name imagebridge-storage
    ```
-3. Save the Cloudinary API secret as a Worker secret:
-   `npx wrangler secret put CLOUDINARY_API_SECRET`
-4. If prompted, paste the generated token into the secret prompt. Keep it private and retain it locally for configuring the extension/Desktop.
-5. Deploy:
+   Keep the PowerShell session open so `$token` remains available. Do not print it or paste it into chat.
+3. Save the Cloudinary API secret:
+   `npx wrangler secret put CLOUDINARY_API_SECRET --name imagebridge-storage`
+4. Deploy:
    `npx wrangler deploy`
-6. Open `https://YOUR-WORKER.workers.dev/api/health`. Confirm `storage: "Cloudinary"` and `configured: true`.
-7. Open the ImageBridge extension settings. Set the Worker URL and the same ImageBridge token.
+5. Open `https://YOUR-WORKER.workers.dev/api/health`. Confirm `storage: "Cloudinary"` and `configured: true`.
+6. Open the ImageBridge extension or Desktop settings. Set the Worker URL and the same ImageBridge token. In Desktop, paste the token into the password field; it is encrypted locally with Windows DPAPI.
 
 Do not paste either secret into a chat, issue, commit, or source file. The API secret belongs only in the Worker secret store. If Cloudflare asks for billing activation or a payment card, stop; do not add a card just to continue this setup.
 
